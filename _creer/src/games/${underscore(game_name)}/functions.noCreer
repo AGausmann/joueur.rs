@@ -1,0 +1,161 @@
+<%
+if not 'rs' in shared:
+    def option(ty):
+        return 'Option<{}>'.format(ty)
+
+    def ref(ty, lifetime=None):
+        if lifetime:
+            return "&'{} {}".format(lifetime, ty)
+        else:
+            return '&{}'.format(ty)
+
+    def mut(ty, lifetime=None):
+        if lifetime:
+            return "&'{} mut {}".format(lifetime, ty)
+        else:
+            return '&mut {}'.format(ty)
+
+    def base_type(ty):
+        name = ty['name']
+        if name == 'null':
+            return '()'
+        elif name == 'boolean':
+            return 'bool'
+        elif name == 'int':
+            return 'isize'
+        elif name == 'float':
+            return 'f64'
+        elif name == 'string':
+            return 'String'
+        elif name == 'list':
+            return 'List<{}>'.format(base_type(ty['valueType']))
+        elif name == 'dictionary':
+            return 'Map<{}, {}>'.format(base_type(ty['keyType']), base_type(ty['valueType']))
+        elif ty['is_game_object']:
+            return name
+        else:
+            raise Exception('Unknown type')
+    
+    def owned_type(ty):
+        result = base_type(ty)
+
+        if ty['nullable']:
+            result = option(result)
+
+        return result
+
+    def is_copy(ty):
+        return ty['name'] in ['null', 'boolean', 'int', 'float']
+
+    def borrowed_type(ty):
+        result = base_type(ty)
+
+        if not is_copy(ty):
+            result = ref(result)
+
+        if ty['nullable']:
+            result = option(result)
+
+        return result
+
+    def default_value(type, value):
+        if value == None:
+            if type['nullable']:
+                return 'None'
+            elif type['name'] == 'null':
+                return '()'
+            else:
+                raise Exception("Can't parse default value")
+        elif type['name'] in ['boolean', 'int', 'float']:
+            return str(value)
+        else:
+            raise Exception("Can't parse default value")
+
+    def sanitize(name):
+        if name == 'move':
+            return 'move_to'
+        elif name == 'type':
+            return 'type_of'
+        else:
+            return name
+
+    def lines(text, max_length):
+        import textwrap 
+
+        result = []
+        for paragraph in text.split('\n'):
+            if paragraph:
+                result.extend(textwrap.wrap(paragraph, max_length))
+            else:
+                result.append('')
+        return result
+
+    def prefix_lines(text, prefix, max_line_length=99):
+        return '\n'.join(
+            (prefix + line).rstrip() for line in lines(text, max_line_length - len(prefix))
+        )
+
+    def obj_doc(obj, prefix):
+        return prefix_lines(obj['description'], prefix)
+
+    def attr_doc(attr, parent, prefix):
+        text = attr['description']
+
+        if parent:
+            text = '_Inherited from {}_\n\n'.format(parent) + text
+
+        return prefix_lines(text, prefix)
+
+    def func_doc(func, parent, prefix):
+        text = func['description']
+
+        if func['arguments']:
+            text += '\n\n# Arguments'
+            for arg in func['arguments']:
+                text += '\n\n- _{}_ - {}'.format(sanitize(underscore(arg['name'])), arg['description'])
+
+        if func['returns']:
+            text += '\n\n# Returns\n\n' + func['returns']['description']
+
+        if parent:
+            text = '_Inherited from {}_\n\n'.format(parent) + text
+
+        return prefix_lines(text, prefix)
+
+    def all_attributes(obj):
+        for name, attr in obj['attributes'].items():
+            yield name, attr, None
+
+        for parent in obj['parentClasses']:
+            for name, attr, other_parent in all_attributes(game_objs[parent]):
+                yield name, attr, other_parent or parent
+
+    def all_functions(obj):
+        for name, func in obj['functions'].items():
+            yield name, func, None
+
+        for parent in obj['parentClasses']:
+            for name, func, other_parent in all_functions(game_objs[parent]):
+                yield name, func, other_parent or parent
+
+    def all_parents(obj):
+        parents = set()
+        for parent in obj['parentClasses']:
+            parents.update(all_parents(game_objs[parent]))
+            parents.add(parent)
+        return list(parents)
+
+    shared['rs'] = {
+        'base_type': base_type,
+        'owned_type': owned_type,
+        'borrowed_type': borrowed_type,
+        'default_value': default_value,
+        'sanitize': sanitize,
+        'obj_doc': obj_doc,
+        'attr_doc': attr_doc,
+        'func_doc': func_doc,
+        'all_attributes': all_attributes,
+        'all_functions': all_functions,
+        'all_parents': all_parents,
+    }
+%>\
