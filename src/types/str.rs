@@ -1,5 +1,6 @@
 //! Associated types for `Str`.
 
+use std::borrow::{Borrow, BorrowMut};
 use std::iter::FromIterator;
 use std::ops;
 use std::sync::Arc;
@@ -16,17 +17,51 @@ pub struct Str {
     inner: Arc<String>,
 }
 
+impl Str {
+    pub fn as_slice(&self) -> &str {
+        &*self.inner
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut str {
+        &mut *Arc::make_mut(&mut self.inner)
+    }
+}
+
 impl ops::Deref for Str {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.as_slice()
     }
 }
 
 impl ops::DerefMut for Str {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *Arc::make_mut(&mut self.inner)
+        self.as_mut_slice()
+    }
+}
+
+impl AsRef<str> for Str {
+    fn as_ref(&self) -> &str {
+        self.as_slice()
+    }
+}
+
+impl AsMut<str> for Str {
+    fn as_mut(&mut self) -> &mut str {
+        self.as_mut_slice()
+    }
+}
+
+impl Borrow<str> for Str {
+    fn borrow(&self) -> &str {
+        self.as_slice()
+    }
+}
+
+impl BorrowMut<str> for Str {
+    fn borrow_mut(&mut self) -> &mut str {
+        self.as_mut_slice()
     }
 }
 

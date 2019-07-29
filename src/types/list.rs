@@ -1,5 +1,6 @@
 //! Associated types for `List`.
 
+use std::borrow::{Borrow, BorrowMut};
 use std::iter::FromIterator;
 use std::ops;
 use std::sync::Arc;
@@ -15,11 +16,24 @@ pub struct List<T> {
     inner: Arc<Vec<T>>,
 }
 
+impl<T> List<T> {
+    pub fn as_slice(&self) -> &[T] {
+        &self.inner
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [T]
+    where
+        T: Clone,
+    {
+        &mut *Arc::make_mut(&mut self.inner)
+    }
+}
+
 impl<T> ops::Deref for List<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        self.as_slice()
     }
 }
 
@@ -28,7 +42,37 @@ where
     T: Clone,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *Arc::make_mut(&mut self.inner)
+        self.as_mut_slice()
+    }
+}
+
+impl<T> AsRef<[T]> for List<T> {
+    fn as_ref(&self) -> &[T] {
+        self.as_slice()
+    }
+}
+
+impl<T> AsMut<[T]> for List<T>
+where
+    T: Clone,
+{
+    fn as_mut(&mut self) -> &mut [T] {
+        self.as_mut_slice()
+    }
+}
+
+impl<T> Borrow<[T]> for List<T> {
+    fn borrow(&self) -> &[T] {
+        self.as_slice()
+    }
+}
+
+impl<T> BorrowMut<[T]> for List<T>
+where
+    T: Clone,
+{
+    fn borrow_mut(&mut self) -> &mut [T] {
+        self.as_mut_slice()
     }
 }
 
