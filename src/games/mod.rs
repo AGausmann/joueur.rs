@@ -1,3 +1,5 @@
+//! Per-game APIs and AI implementations.
+
 // Due to limitations in Creer, this list needs to be maintained manually.
 pub mod anarchy;
 pub mod catastrophe;

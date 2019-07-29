@@ -1,10 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
-/// Two player grid based game where each player tries to burn down the other player's buildings.
-/// Let it burn.
+/// Holds top-level game state and settings for the current game.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Game {
 }
 
@@ -12,7 +12,7 @@ impl Game {
 
     /// A mapping of every game object's ID to the actual game object. Primarily used by the server
     /// and client to easily refer to the game objects via ID.
-    pub fn game_objects(&self) -> Map<String, GameObject> {
+    pub fn game_objects(&self) -> Map<Str, GameObject> {
         unimplemented!()
     }
 
@@ -22,7 +22,7 @@ impl Game {
     }
 
     /// A unique identifier for the game instance that is being played.
-    pub fn session(&self) -> String {
+    pub fn session(&self) -> Str {
         unimplemented!()
     }
 
@@ -32,27 +32,27 @@ impl Game {
     }
 
     /// The current turn number, starting at 0 for the first player's turn.
-    pub fn current_turn(&self) -> isize {
+    pub fn current_turn(&self) -> i64 {
         unimplemented!()
     }
 
     /// The maximum number of turns before the game will automatically end.
-    pub fn max_turns(&self) -> isize {
+    pub fn max_turns(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of time (in nano-seconds) added after each player performs a turn.
-    pub fn time_added_per_turn(&self) -> isize {
+    pub fn time_added_per_turn(&self) -> i64 {
         unimplemented!()
     }
 
     /// The width of the entire map along the horizontal (x) axis.
-    pub fn map_width(&self) -> isize {
+    pub fn map_width(&self) -> i64 {
         unimplemented!()
     }
 
     /// The width of the entire map along the vertical (y) axis.
-    pub fn map_height(&self) -> isize {
+    pub fn map_height(&self) -> i64 {
         unimplemented!()
     }
 
@@ -79,36 +79,17 @@ impl Game {
 
     /// How many bribes players get at the beginning of their turn, not counting their burned down
     /// Buildings.
-    pub fn base_bribes_per_turn(&self) -> isize {
+    pub fn base_bribes_per_turn(&self) -> i64 {
         unimplemented!()
     }
 
     /// The maximum amount of fire value for any Building.
-    pub fn max_fire(&self) -> isize {
+    pub fn max_fire(&self) -> i64 {
         unimplemented!()
     }
 
     /// The maximum amount of intensity value for any Forecast.
-    pub fn max_forecast_intensity(&self) -> isize {
+    pub fn max_forecast_intensity(&self) -> i64 {
         unimplemented!()
-    }
-
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
-    pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
-    }
-
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
     }
 }

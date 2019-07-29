@@ -1,72 +1,128 @@
 <%
 if not 'rs' in shared:
-    def option(ty):
-        return 'Option<{}>'.format(ty)
+    def fish(t, *args):
+        if args:
+            return '{}<{}>'.format(t, ', '.join(args))
+        else:
+            return t
 
-    def ref(ty, lifetime=None):
+    def ref(t, lifetime=None):
         if lifetime:
-            return "&'{} {}".format(lifetime, ty)
+            return "&'{} {}".format(lifetime, t)
         else:
-            return '&{}'.format(ty)
+            return '&{}'.format(t)
 
-    def mut(ty, lifetime=None):
+    def mut(t, lifetime=None):
         if lifetime:
-            return "&'{} mut {}".format(lifetime, ty)
+            return "&'{} mut {}".format(lifetime, t)
         else:
-            return '&mut {}'.format(ty)
+            return '&mut {}'.format(t)
 
-    def base_type(ty):
-        name = ty['name']
-        if name == 'null':
-            return '()'
-        elif name == 'boolean':
-            return 'bool'
-        elif name == 'int':
-            return 'isize'
-        elif name == 'float':
-            return 'f64'
-        elif name == 'string':
-            return 'String'
-        elif name == 'list':
-            return 'List<{}>'.format(base_type(ty['valueType']))
-        elif name == 'dictionary':
-            return 'Map<{}, {}>'.format(base_type(ty['keyType']), base_type(ty['valueType']))
-        elif ty['is_game_object']:
-            return name
-        else:
-            raise Exception('Unknown type')
-    
+    def option(t):
+        return fish('Option', t)
+
+    def rc(t):
+        return fish('std::rc::Rc', t)
+
+    def vec(t):
+        return fish('Vec', t)
+
+    def slice(t):
+        return '[{}]'.format(t)
+
+    def hashmap(k, v):
+        return fish('std::collections::HashMap', k, v)
+
     def owned_type(ty):
-        result = base_type(ty)
+        name = ty['name']
+
+        if name == 'null':
+            result = '()'
+
+        elif name == 'boolean':
+            result = 'bool'
+
+        elif name == 'int':
+            result = 'i64'
+
+        elif name == 'float':
+            result = 'f64'
+
+        elif name == 'string':
+            result = 'Str'
+
+        elif name == 'list':
+            result = fish('List', owned_type(ty['valueType']))
+
+        elif name == 'dictionary':
+            result = fish(
+                'Map', 
+                owned_type(ty['keyType']),
+                owned_type(ty['valueType']),
+            )
+
+        elif ty['is_game_object']:
+            result = name
+
+        else:
+            raise Exception(name)
 
         if ty['nullable']:
             result = option(result)
 
         return result
 
-    def is_copy(ty):
-        return ty['name'] in ['null', 'boolean', 'int', 'float']
+    def arg_type(ty):
+        name = ty['name']
 
-    def borrowed_type(ty):
-        result = base_type(ty)
+        if name == 'null':
+            result = '()'
 
-        if not is_copy(ty):
-            result = ref(result)
+        elif name == 'boolean':
+            result = 'bool'
+
+        elif name == 'int':
+            result = 'i64'
+
+        elif name == 'float':
+            result = 'f64'
+
+        elif name == 'string':
+            result = ref('str')
+
+        elif name == 'list':
+            result = ref(slice(owned_type(ty['valueType'])))
+
+        elif name == 'dictionary':
+            result = ref(fish(
+                'Map',
+                owned_type(ty['keyType']),
+                owned_type(ty['valueType']),
+            ))
+
+        elif ty['is_game_object']:
+            result = ref(name)
+
+        else:
+            raise Exception(name)
 
         if ty['nullable']:
             result = option(result)
 
         return result
 
-    def default_value(type, value):
+    def return_type(ty):
+        return owned_type(ty)
+
+    def default_value(ty, value):
         if value == None:
-            if type['nullable']:
+            if ty['nullable']:
                 return 'None'
-            elif type['name'] == 'null':
+            elif ty['name'] == 'null':
                 return '()'
             else:
                 raise Exception("Can't parse default value")
-        elif type['name'] in ['boolean', 'int', 'float']:
+        elif ty['name'] in ['boolean', 'int', 'float']:
             return str(value)
         else:
             raise Exception("Can't parse default value")
@@ -92,11 +148,19 @@ if not 'rs' in shared:
 
     def prefix_lines(text, prefix, max_line_length=99):
         return '\n'.join(
-            (prefix + line).rstrip() for line in lines(text, max_line_length - len(prefix))
+            (prefix + line).rstrip()
+            for line in lines(text, max_line_length - len(prefix))
         )
 
+    import re
+    re_null = re.compile('null', re.IGNORECASE)
+
+    def rustify(text):
+        text = re_null.sub('None', text)
+        return text
+
     def obj_doc(obj, prefix):
-        return prefix_lines(obj['description'], prefix)
+        return prefix_lines(rustify(obj['description']), prefix)
 
     def attr_doc(attr, parent, prefix):
         text = attr['description']
@@ -104,7 +168,7 @@ if not 'rs' in shared:
         if parent:
             text = '_Inherited from {}_\n\n'.format(parent) + text
 
-        return prefix_lines(text, prefix)
+        return prefix_lines(rustify(text), prefix)
 
     def func_doc(func, parent, prefix):
         text = func['description']
@@ -112,43 +176,61 @@ if not 'rs' in shared:
         if func['arguments']:
             text += '\n\n# Arguments'
             for arg in func['arguments']:
-                text += '\n\n- _{}_ - {}'.format(sanitize(underscore(arg['name'])), arg['description'])
+                text += '\n\n- _{}_ - {}'.format(
+                    sanitize(underscore(arg['name'])),
+                    arg['description'],
+                )
 
         if func['returns']:
-            text += '\n\n# Returns\n\n' + func['returns']['description']
+            text += '\n\n# Returns\n\n{}'.format(
+                func['returns']['description'],
+            )
 
         if parent:
             text = '_Inherited from {}_\n\n'.format(parent) + text
 
-        return prefix_lines(text, prefix)
+        return prefix_lines(rustify(text), prefix)
 
     def all_attributes(obj):
         for name, attr in obj['attributes'].items():
             yield name, attr, None
 
-        for parent in obj['parentClasses']:
-            for name, attr, other_parent in all_attributes(game_objs[parent]):
-                yield name, attr, other_parent or parent
+        for parent in all_parents(obj):
+            for name, attr in game_objs[parent]['attributes'].items():
+                yield name, attr, parent
 
     def all_functions(obj):
         for name, func in obj['functions'].items():
             yield name, func, None
 
-        for parent in obj['parentClasses']:
-            for name, func, other_parent in all_functions(game_objs[parent]):
-                yield name, func, other_parent or parent
+        for parent in all_parents(obj):
+            for name, func in game_objs[parent]['functions'].items():
+                yield name, func, parent
 
     def all_parents(obj):
-        parents = set()
+        from collections import OrderedDict
+
+        # Special logic to sort parents topologically for nice documentation ordering.
+        # Direct parents are ordered first, then the next level, etc.
+        # Last will be the top level, such as GameObject
+
+        parents = OrderedDict()
         for parent in obj['parentClasses']:
-            parents.update(all_parents(game_objs[parent]))
-            parents.add(parent)
+            parents[parent] = None
+
+        for parent in obj['parentClasses']:
+            for parent in all_parents(game_objs[parent]):
+                # We explicitly delete here to move it to the back.
+                # Inserting an existing key doesn't move it, per the docs.
+                if parent in parents:
+                    del parents[parent]
+                parents[parent] = None
+
         return list(parents)
 
     shared['rs'] = {
-        'base_type': base_type,
-        'owned_type': owned_type,
-        'borrowed_type': borrowed_type,
+        'return_type': return_type,
+        'arg_type': arg_type,
         'default_value': default_value,
         'sanitize': sanitize,
         'obj_doc': obj_doc,

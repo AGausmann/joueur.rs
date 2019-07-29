@@ -1,10 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
-/// Use cowboys to have a good time and play some music on a Piano, while brawling with enemy
-/// Cowboys.
+/// Holds top-level game state and settings for the current game.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Game {
 }
 
@@ -12,7 +12,7 @@ impl Game {
 
     /// A mapping of every game object's ID to the actual game object. Primarily used by the server
     /// and client to easily refer to the game objects via ID.
-    pub fn game_objects(&self) -> Map<String, GameObject> {
+    pub fn game_objects(&self) -> Map<Str, GameObject> {
         unimplemented!()
     }
 
@@ -22,7 +22,7 @@ impl Game {
     }
 
     /// A unique identifier for the game instance that is being played.
-    pub fn session(&self) -> String {
+    pub fn session(&self) -> Str {
         unimplemented!()
     }
 
@@ -32,27 +32,27 @@ impl Game {
     }
 
     /// The current turn number, starting at 0 for the first player's turn.
-    pub fn current_turn(&self) -> isize {
+    pub fn current_turn(&self) -> i64 {
         unimplemented!()
     }
 
     /// The maximum number of turns before the game will automatically end.
-    pub fn max_turns(&self) -> isize {
+    pub fn max_turns(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of time (in nano-seconds) added after each player performs a turn.
-    pub fn time_added_per_turn(&self) -> isize {
+    pub fn time_added_per_turn(&self) -> i64 {
         unimplemented!()
     }
 
     /// The number of Tiles in the map along the x (horizontal) axis.
-    pub fn map_width(&self) -> isize {
+    pub fn map_width(&self) -> i64 {
         unimplemented!()
     }
 
     /// The number of Tiles in the map along the y (vertical) axis.
-    pub fn map_height(&self) -> isize {
+    pub fn map_height(&self) -> i64 {
         unimplemented!()
     }
 
@@ -73,7 +73,7 @@ impl Game {
     }
 
     /// All the jobs that Cowboys can be called in with.
-    pub fn jobs(&self) -> List<String> {
+    pub fn jobs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -84,56 +84,37 @@ impl Game {
 
     /// When a player's rowdiness reaches or exceeds this number their Cowboys take a collective
     /// siesta.
-    pub fn rowdiness_to_siesta(&self) -> isize {
+    pub fn rowdiness_to_siesta(&self) -> i64 {
         unimplemented!()
     }
 
     /// How long siestas are for a player's team.
-    pub fn siesta_length(&self) -> isize {
+    pub fn siesta_length(&self) -> i64 {
         unimplemented!()
     }
 
     /// The maximum number of Cowboys a Player can bring into the saloon of each specific job.
-    pub fn max_cowboys_per_job(&self) -> isize {
+    pub fn max_cowboys_per_job(&self) -> i64 {
         unimplemented!()
     }
 
     /// How much damage is applied to things hit by Sharpshooters when they act.
-    pub fn sharpshooter_damage(&self) -> isize {
+    pub fn sharpshooter_damage(&self) -> i64 {
         unimplemented!()
     }
 
     /// How much damage is applied to neighboring things bit by the Sharpshooter between turns.
-    pub fn brawler_damage(&self) -> isize {
+    pub fn brawler_damage(&self) -> i64 {
         unimplemented!()
     }
 
     /// How many turns a Cowboy will be drunk for if a bottle breaks on it.
-    pub fn turns_drunk(&self) -> isize {
+    pub fn turns_drunk(&self) -> i64 {
         unimplemented!()
     }
 
     /// How many turns a Bartender will be busy for after throwing a Bottle.
-    pub fn bartender_cooldown(&self) -> isize {
+    pub fn bartender_cooldown(&self) -> i64 {
         unimplemented!()
-    }
-
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
-    pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
-    }
-
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
     }
 }

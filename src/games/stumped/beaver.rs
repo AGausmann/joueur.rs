@@ -1,16 +1,17 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A beaver in the game.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Beaver {
 }
 
 impl Beaver {
 
     /// How many moves this Beaver has left this turn.
-    pub fn moves(&self) -> isize {
+    pub fn moves(&self) -> i64 {
         unimplemented!()
     }
 
@@ -20,7 +21,7 @@ impl Beaver {
     }
 
     /// The number of actions remaining for the Beaver this turn.
-    pub fn actions(&self) -> isize {
+    pub fn actions(&self) -> i64 {
         unimplemented!()
     }
 
@@ -30,22 +31,22 @@ impl Beaver {
     }
 
     /// How much health this Beaver has left.
-    pub fn health(&self) -> isize {
+    pub fn health(&self) -> i64 {
         unimplemented!()
     }
 
     /// Number of turns this Beaver is distracted for (0 means not distracted).
-    pub fn turns_distracted(&self) -> isize {
+    pub fn turns_distracted(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of branches this Beaver is holding.
-    pub fn branches(&self) -> isize {
+    pub fn branches(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of food this Beaver is holding.
-    pub fn food(&self) -> isize {
+    pub fn food(&self) -> i64 {
         unimplemented!()
     }
 
@@ -63,7 +64,7 @@ impl Beaver {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -72,14 +73,14 @@ impl Beaver {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -168,8 +169,8 @@ impl Beaver {
     pub fn drop(
         &self,
         _tile: &Tile,
-        _resource: &String,
-        _amount: isize,
+        _resource: &str,
+        _amount: i64,
     )
         -> bool
     {
@@ -194,8 +195,8 @@ impl Beaver {
     pub fn pickup(
         &self,
         _tile: &Tile,
-        _resource: &String,
-        _amount: isize,
+        _resource: &str,
+        _amount: i64,
     )
         -> bool
     {
@@ -212,7 +213,7 @@ impl Beaver {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

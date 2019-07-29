@@ -1,9 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// An furnishing in the Saloon that must be pathed around, or destroyed.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Furnishing {
 }
 
@@ -20,7 +21,7 @@ impl Furnishing {
     }
 
     /// How much health this Furnishing currently has.
-    pub fn health(&self) -> isize {
+    pub fn health(&self) -> i64 {
         unimplemented!()
     }
 
@@ -38,7 +39,7 @@ impl Furnishing {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -47,14 +48,14 @@ impl Furnishing {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -68,7 +69,7 @@ impl Furnishing {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

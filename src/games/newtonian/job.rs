@@ -1,36 +1,37 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// Information about a unit's job.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Job {
 }
 
 impl Job {
 
     /// The Job title. 'intern', 'manager', or 'physicist'.
-    pub fn title(&self) -> String {
+    pub fn title(&self) -> Str {
         unimplemented!()
     }
 
     /// The amount of starting health this Job has.
-    pub fn health(&self) -> isize {
+    pub fn health(&self) -> i64 {
         unimplemented!()
     }
 
     /// The number of moves this Job can make per turn.
-    pub fn moves(&self) -> isize {
+    pub fn moves(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of damage this Job does per attack.
-    pub fn damage(&self) -> isize {
+    pub fn damage(&self) -> i64 {
         unimplemented!()
     }
 
     /// How many combined resources a unit with this Job can hold at once.
-    pub fn carry_limit(&self) -> isize {
+    pub fn carry_limit(&self) -> i64 {
         unimplemented!()
     }
 
@@ -38,7 +39,7 @@ impl Job {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -47,14 +48,14 @@ impl Job {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -68,7 +69,7 @@ impl Job {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

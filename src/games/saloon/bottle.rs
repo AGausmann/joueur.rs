@@ -1,9 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A bottle thrown by a bartender at a Tile.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bottle {
 }
 
@@ -16,7 +17,7 @@ impl Bottle {
 
     /// The Direction this Bottle is flying and will move to between turns, can be 'North', 'East',
     /// 'South', or 'West'.
-    pub fn direction(&self) -> String {
+    pub fn direction(&self) -> Str {
         unimplemented!()
     }
 
@@ -28,7 +29,7 @@ impl Bottle {
 
     /// The direction any Cowboys hit by this will move, can be 'North', 'East', 'South', or
     /// 'West'.
-    pub fn drunk_direction(&self) -> String {
+    pub fn drunk_direction(&self) -> Str {
         unimplemented!()
     }
 
@@ -36,7 +37,7 @@ impl Bottle {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -45,14 +46,14 @@ impl Bottle {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -66,7 +67,7 @@ impl Bottle {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

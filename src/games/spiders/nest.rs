@@ -1,10 +1,11 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A location (node) connected to other Nests via Webs (edges) in the game that Spiders can
 /// converge on, regardless of owner.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Nest {
 }
 
@@ -26,12 +27,12 @@ impl Nest {
     }
 
     /// The X coordinate of the Nest. Used for distance calculations.
-    pub fn x(&self) -> isize {
+    pub fn x(&self) -> i64 {
         unimplemented!()
     }
 
     /// The Y coordinate of the Nest. Used for distance calculations.
-    pub fn y(&self) -> isize {
+    pub fn y(&self) -> i64 {
         unimplemented!()
     }
 
@@ -39,7 +40,7 @@ impl Nest {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -48,14 +49,14 @@ impl Nest {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -69,7 +70,7 @@ impl Nest {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

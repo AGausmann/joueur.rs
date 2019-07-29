@@ -1,9 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A port on a Tile.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port {
 }
 
@@ -14,20 +15,20 @@ impl Port {
         unimplemented!()
     }
 
-    /// The owner of this Port, or null if owned by merchants.
+    /// The owner of this Port, or None if owned by merchants.
     pub fn owner(&self) -> Option<Player> {
         unimplemented!()
     }
 
     /// For players, how much more gold this Port can spend this turn. For merchants, how much gold
     /// this Port has accumulated (it will spawn a ship when the Port can afford one).
-    pub fn gold(&self) -> isize {
+    pub fn gold(&self) -> i64 {
         unimplemented!()
     }
 
     /// (Merchants only) How much gold was invested into this Port. Investment determines the
     /// strength and value of the next ship.
-    pub fn investment(&self) -> isize {
+    pub fn investment(&self) -> i64 {
         unimplemented!()
     }
 
@@ -35,7 +36,7 @@ impl Port {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -44,14 +45,14 @@ impl Port {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -66,7 +67,7 @@ impl Port {
     /// True if Unit was created successfully, false otherwise.
     pub fn spawn(
         &self,
-        _type_of: &String,
+        _type_of: &str,
     )
         -> bool
     {
@@ -83,7 +84,7 @@ impl Port {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

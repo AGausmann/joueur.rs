@@ -1,22 +1,23 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A resource spawner that generates branches or food.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spawner {
 }
 
 impl Spawner {
 
     /// What type of resource this is ('food' or 'branches').
-    pub fn type_of(&self) -> String {
+    pub fn type_of(&self) -> Str {
         unimplemented!()
     }
 
     /// How much health this Spawner has, which is used to calculate how much of its resource can
     /// be harvested.
-    pub fn health(&self) -> isize {
+    pub fn health(&self) -> i64 {
         unimplemented!()
     }
 
@@ -35,7 +36,7 @@ impl Spawner {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -44,14 +45,14 @@ impl Spawner {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -65,7 +66,7 @@ impl Spawner {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

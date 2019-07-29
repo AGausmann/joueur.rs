@@ -1,10 +1,11 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// An eager young person that wants to join your gang, and will call in the veteran Cowboys you
 /// need to win the brawl in the saloon.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct YoungGun {
 }
 
@@ -34,7 +35,7 @@ impl YoungGun {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -43,14 +44,14 @@ impl YoungGun {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -64,10 +65,10 @@ impl YoungGun {
     /// # Returns
     ///
     /// The new Cowboy that was called in if valid. They will not be added to any `cowboys` lists
-    /// until the turn ends. Null otherwise.
+    /// until the turn ends. None otherwise.
     pub fn call_in(
         &self,
-        _job: &String,
+        _job: &str,
     )
         -> Option<Cowboy>
     {
@@ -84,7 +85,7 @@ impl YoungGun {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

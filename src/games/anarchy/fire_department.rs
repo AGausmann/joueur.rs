@@ -1,16 +1,17 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// Can put out fires completely.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FireDepartment {
 }
 
 impl FireDepartment {
 
     /// The amount of fire removed from a building when bribed to extinguish a building.
-    pub fn fire_extinguished(&self) -> isize {
+    pub fn fire_extinguished(&self) -> i64 {
         unimplemented!()
     }
 
@@ -18,7 +19,7 @@ impl FireDepartment {
     ///
     /// How much health this building currently has. When this reaches 0 the Building has been
     /// burned down.
-    pub fn health(&self) -> isize {
+    pub fn health(&self) -> i64 {
         unimplemented!()
     }
 
@@ -49,14 +50,14 @@ impl FireDepartment {
     /// _Inherited from Building_
     ///
     /// The location of the Building along the x-axis.
-    pub fn x(&self) -> isize {
+    pub fn x(&self) -> i64 {
         unimplemented!()
     }
 
     /// _Inherited from Building_
     ///
     /// The location of the Building along the y-axis.
-    pub fn y(&self) -> isize {
+    pub fn y(&self) -> i64 {
         unimplemented!()
     }
 
@@ -64,34 +65,34 @@ impl FireDepartment {
     ///
     /// How much fire is currently burning the building, and thus how much damage it will take at
     /// the end of its owner's turn. 0 means no fire.
-    pub fn fire(&self) -> isize {
+    pub fn fire(&self) -> i64 {
         unimplemented!()
     }
 
     /// _Inherited from Building_
     ///
-    /// The Building directly to the north of this building, or null if not present.
+    /// The Building directly to the north of this building, or None if not present.
     pub fn building_north(&self) -> Option<Building> {
         unimplemented!()
     }
 
     /// _Inherited from Building_
     ///
-    /// The Building directly to the east of this building, or null if not present.
+    /// The Building directly to the east of this building, or None if not present.
     pub fn building_east(&self) -> Option<Building> {
         unimplemented!()
     }
 
     /// _Inherited from Building_
     ///
-    /// The Building directly to the south of this building, or null if not present.
+    /// The Building directly to the south of this building, or None if not present.
     pub fn building_south(&self) -> Option<Building> {
         unimplemented!()
     }
 
     /// _Inherited from Building_
     ///
-    /// The Building directly to the west of this building, or null if not present.
+    /// The Building directly to the west of this building, or None if not present.
     pub fn building_west(&self) -> Option<Building> {
         unimplemented!()
     }
@@ -100,7 +101,7 @@ impl FireDepartment {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -109,14 +110,14 @@ impl FireDepartment {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -148,7 +149,7 @@ impl FireDepartment {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

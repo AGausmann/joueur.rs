@@ -1,15 +1,16 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A unit group in the game. This may consist of a ship and any number of crew.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unit {
 }
 
 impl Unit {
 
-    /// The Player that owns and can control this Unit, or null if the Unit is neutral.
+    /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
         unimplemented!()
     }
@@ -20,22 +21,22 @@ impl Unit {
     }
 
     /// If a ship is on this Tile, how much health it has remaining. 0 for no ship.
-    pub fn ship_health(&self) -> isize {
+    pub fn ship_health(&self) -> i64 {
         unimplemented!()
     }
 
     /// How many crew are on this Tile. This number will always be <= crewHealth.
-    pub fn crew(&self) -> isize {
+    pub fn crew(&self) -> i64 {
         unimplemented!()
     }
 
     /// How much total health the crew on this Tile have.
-    pub fn crew_health(&self) -> isize {
+    pub fn crew_health(&self) -> i64 {
         unimplemented!()
     }
 
     /// How much gold this Unit is carrying.
-    pub fn gold(&self) -> isize {
+    pub fn gold(&self) -> i64 {
         unimplemented!()
     }
 
@@ -45,7 +46,7 @@ impl Unit {
     }
 
     /// How many more times this Unit may move this turn.
-    pub fn moves(&self) -> isize {
+    pub fn moves(&self) -> i64 {
         unimplemented!()
     }
 
@@ -62,7 +63,7 @@ impl Unit {
 
     /// (Merchants only) The number of turns this merchant ship won't be able to move. They will
     /// still attack. Merchant ships are stunned when they're attacked.
-    pub fn stun_turns(&self) -> isize {
+    pub fn stun_turns(&self) -> i64 {
         unimplemented!()
     }
 
@@ -70,7 +71,7 @@ impl Unit {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -79,20 +80,20 @@ impl Unit {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile. If this Unit merges with another
-    /// one, the other Unit will be destroyed and its tile will be set to null. Make sure to check
-    /// that your Unit's tile is not null before doing things with it.
+    /// one, the other Unit will be destroyed and its tile will be set to None. Make sure to check
+    /// that your Unit's tile is not None before doing things with it.
     ///
     /// # Arguments
     ///
@@ -125,7 +126,7 @@ impl Unit {
     pub fn attack(
         &self,
         _tile: &Tile,
-        _target: &String,
+        _target: &str,
     )
         -> bool
     {
@@ -145,7 +146,7 @@ impl Unit {
     /// True if successfully buried, false otherwise.
     pub fn bury(
         &self,
-        _amount: isize,
+        _amount: i64,
     )
         -> bool
     {
@@ -164,7 +165,7 @@ impl Unit {
     /// True if successfully dug up, false otherwise.
     pub fn dig(
         &self,
-        _amount: isize,
+        _amount: i64,
     )
         -> bool
     {
@@ -184,7 +185,7 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn deposit(
         &self,
-        _amount: isize,
+        _amount: i64,
     )
         -> bool
     {
@@ -202,7 +203,7 @@ impl Unit {
     /// True if successfully withdrawn, false otherwise.
     pub fn withdraw(
         &self,
-        _amount: isize,
+        _amount: i64,
     )
         -> bool
     {
@@ -228,8 +229,8 @@ impl Unit {
     pub fn split(
         &self,
         _tile: &Tile,
-        _amount: isize,
-        _gold: isize,
+        _amount: i64,
+        _gold: i64,
     )
         -> bool
     {
@@ -259,7 +260,7 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

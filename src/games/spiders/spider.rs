@@ -1,9 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A Spider in the game. The most basic unit.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spider {
 }
 
@@ -14,7 +15,7 @@ impl Spider {
         unimplemented!()
     }
 
-    /// The Nest that this Spider is currently on. Null when moving on a Web.
+    /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
         unimplemented!()
     }
@@ -28,7 +29,7 @@ impl Spider {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -37,14 +38,14 @@ impl Spider {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -58,7 +59,7 @@ impl Spider {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

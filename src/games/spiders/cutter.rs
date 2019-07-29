@@ -1,15 +1,16 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A Spiderling that can cut existing Webs.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cutter {
 }
 
 impl Cutter {
 
-    /// The Web that this Cutter is trying to cut. Null if not cutting.
+    /// The Web that this Cutter is trying to cut. None if not cutting.
     pub fn cutting_web(&self) -> Option<Web> {
         unimplemented!()
     }
@@ -18,7 +19,7 @@ impl Cutter {
     ///
     /// When empty string this Spiderling is not busy, and can act. Otherwise a string representing
     /// what it is busy with, e.g. 'Moving', 'Attacking'.
-    pub fn busy(&self) -> String {
+    pub fn busy(&self) -> Str {
         unimplemented!()
     }
 
@@ -34,20 +35,20 @@ impl Cutter {
     ///
     /// The number of Spiderlings busy with the same work this Spiderling is doing, speeding up the
     /// task.
-    pub fn number_of_coworkers(&self) -> isize {
+    pub fn number_of_coworkers(&self) -> i64 {
         unimplemented!()
     }
 
     /// _Inherited from Spiderling_
     ///
-    /// The Web this Spiderling is using to move. Null if it is not moving.
+    /// The Web this Spiderling is using to move. None if it is not moving.
     pub fn moving_on_web(&self) -> Option<Web> {
         unimplemented!()
     }
 
     /// _Inherited from Spiderling_
     ///
-    /// The Nest this Spiderling is moving to. Null if it is not moving.
+    /// The Nest this Spiderling is moving to. None if it is not moving.
     pub fn moving_to_nest(&self) -> Option<Nest> {
         unimplemented!()
     }
@@ -61,7 +62,7 @@ impl Cutter {
 
     /// _Inherited from Spider_
     ///
-    /// The Nest that this Spider is currently on. Null when moving on a Web.
+    /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
         unimplemented!()
     }
@@ -77,7 +78,7 @@ impl Cutter {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -86,14 +87,14 @@ impl Cutter {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -166,7 +167,7 @@ impl Cutter {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

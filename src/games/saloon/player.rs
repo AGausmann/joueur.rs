@@ -1,22 +1,23 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A player in this game. Every AI controls one player.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Player {
 }
 
 impl Player {
 
     /// The name of the player.
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> Str {
         unimplemented!()
     }
 
     /// What type of client this is, e.g. 'Python', 'JavaScript', or some other language. For
     /// potential data mining purposes.
-    pub fn client_type(&self) -> String {
+    pub fn client_type(&self) -> Str {
         unimplemented!()
     }
 
@@ -31,12 +32,12 @@ impl Player {
     }
 
     /// The reason why the player won the game.
-    pub fn reason_won(&self) -> String {
+    pub fn reason_won(&self) -> Str {
         unimplemented!()
     }
 
     /// The reason why the player lost the game.
-    pub fn reason_lost(&self) -> String {
+    pub fn reason_lost(&self) -> Str {
         unimplemented!()
     }
 
@@ -51,17 +52,17 @@ impl Player {
     }
 
     /// How many times their team has played a piano.
-    pub fn score(&self) -> isize {
+    pub fn score(&self) -> i64 {
         unimplemented!()
     }
 
     /// How rowdy their team is. When it gets too high their team takes a collective siesta.
-    pub fn rowdiness(&self) -> isize {
+    pub fn rowdiness(&self) -> i64 {
         unimplemented!()
     }
 
     /// How many enemy Cowboys this player's team has killed.
-    pub fn kills(&self) -> isize {
+    pub fn kills(&self) -> i64 {
         unimplemented!()
     }
 
@@ -77,7 +78,7 @@ impl Player {
 
     /// 0 when not having a team siesta. When greater than 0 represents how many turns left for the
     /// team siesta to complete.
-    pub fn siesta(&self) -> isize {
+    pub fn siesta(&self) -> i64 {
         unimplemented!()
     }
 
@@ -85,7 +86,7 @@ impl Player {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -94,14 +95,14 @@ impl Player {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -115,7 +116,7 @@ impl Player {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()

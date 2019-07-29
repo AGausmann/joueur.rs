@@ -1,15 +1,16 @@
 #![allow(dead_code, unused_imports)]
 
 use super::*;
-use crate::util::*;
+use crate::types::*;
 
 /// A unit in the game.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unit {
 }
 
 impl Unit {
 
-    /// The Player that owns and can control this Unit, or null if the Unit is neutral.
+    /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
         unimplemented!()
     }
@@ -25,7 +26,7 @@ impl Unit {
     }
 
     /// How many moves this Unit has left this turn.
-    pub fn moves(&self) -> isize {
+    pub fn moves(&self) -> i64 {
         unimplemented!()
     }
 
@@ -46,12 +47,12 @@ impl Unit {
     }
 
     /// The amount of food this Unit is holding.
-    pub fn food(&self) -> isize {
+    pub fn food(&self) -> i64 {
         unimplemented!()
     }
 
     /// The amount of materials this Unit is holding.
-    pub fn materials(&self) -> isize {
+    pub fn materials(&self) -> i64 {
         unimplemented!()
     }
 
@@ -63,7 +64,7 @@ impl Unit {
 
     /// The number of turns before this Unit dies. This only applies to neutral fresh humans
     /// created from combat. Otherwise, 0.
-    pub fn turns_to_die(&self) -> isize {
+    pub fn turns_to_die(&self) -> i64 {
         unimplemented!()
     }
 
@@ -77,7 +78,7 @@ impl Unit {
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
-    pub fn id(&self) -> String {
+    pub fn id(&self) -> Str {
         unimplemented!()
     }
 
@@ -86,14 +87,14 @@ impl Unit {
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
-    pub fn game_object_name(&self) -> String {
+    pub fn game_object_name(&self) -> Str {
         unimplemented!()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
-    pub fn logs(&self) -> List<String> {
+    pub fn logs(&self) -> List<Str> {
         unimplemented!()
     }
 
@@ -186,7 +187,7 @@ impl Unit {
     pub fn construct(
         &self,
         _tile: &Tile,
-        _type_of: &String,
+        _type_of: &str,
     )
         -> bool
     {
@@ -230,8 +231,8 @@ impl Unit {
     pub fn drop(
         &self,
         _tile: &Tile,
-        _resource: &String,
-        _amount: isize,
+        _resource: &str,
+        _amount: i64,
     )
         -> bool
     {
@@ -256,8 +257,8 @@ impl Unit {
     pub fn pickup(
         &self,
         _tile: &Tile,
-        _resource: &String,
-        _amount: isize,
+        _resource: &str,
+        _amount: i64,
     )
         -> bool
     {
@@ -275,7 +276,7 @@ impl Unit {
     /// True if successfully changed Jobs, false otherwise.
     pub fn change_job(
         &self,
-        _job: &String,
+        _job: &str,
     )
         -> bool
     {
@@ -306,7 +307,7 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &String,
+        _message: &str,
     )
     {
         unimplemented!()
