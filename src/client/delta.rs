@@ -43,9 +43,50 @@ pub struct Gamelog<'a, T> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Delta<'a, T> {
-    #[serde(rename = "type", borrow)]
-    type_: Borrowable<'a, str>,
+    #[serde(borrow, flatten)]
+    type_: DeltaType<'a>,
     game: GameDelta<'a, T>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+pub enum DeltaType<'a> {
+    Start,
+    #[serde(rename_all = "camelCase")]
+    Ran {
+        #[serde(borrow)]
+        player: ObjRef<'a>,
+        #[serde(borrow)]
+        run: RunInfo<'a>,
+        returned: Value,
+    },
+    #[serde(rename_all = "camelCase")]
+    Finished {
+        #[serde(borrow)]
+        player: ObjRef<'a>,
+        #[serde(borrow)]
+        order: Borrowable<'a, str>,
+        returned: Value,
+    },
+    Over,
+    #[serde(rename_all = "camelCase")]
+    Disconnect {
+        #[serde(borrow)]
+        player: ObjRef<'a>,
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunInfo<'a> {
+    #[serde(borrow)]
+    function_name: Borrowable<'a, str>,
+
+    #[serde(borrow)]
+    caller: ObjRef<'a>,
+
+    #[serde(borrow)]
+    args: HashMap<Borrowable<'a, str>, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -166,7 +207,7 @@ impl<'a, T> Default for CollectionDelta<'a, T> {
     }
 }
 
-struct Borrowable<'a, T: ?Sized + ToOwned>(Cow<'a, T>);
+pub struct Borrowable<'a, T: ?Sized + ToOwned>(Cow<'a, T>);
 
 impl<'a> Serialize for Borrowable<'a, str> {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
