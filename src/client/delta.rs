@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::{fmt, ops};
@@ -8,6 +9,7 @@ use serde::de::{self, Deserialize, Deserializer, Error, MapAccess, Visitor};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde_derive::{Deserialize, Serialize};
 use serde_json as json;
+use serde_json::Value;
 use serde_json::value::RawValue;
 
 use crate::client::base::ObjRef;
@@ -15,6 +17,27 @@ use crate::client::base::ObjRef;
 thread_local! {
     static DELTA_REMOVED: RefCell<String> = RefCell::new("&RM".to_string());
     static DELTA_LIST_LENGTH: RefCell<String> = RefCell::new("&LEN".to_string());
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Gamelog<'a, T> {
+    #[serde(borrow)]
+    game_name: Borrowable<'a, str>,
+
+    #[serde(borrow)]
+    game_session: Borrowable<'a, str>,
+
+    #[serde(borrow)]
+    deltas: Vec<Delta<'a, T>>,
+
+    #[serde(borrow)]
+    constants: HashMap<Borrowable<'a, str>, Value>,
+
+    epoch: u64,
+
+    #[serde(borrow)]
+    random_seed: Borrowable<'a, str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -255,205 +278,231 @@ mod tests {
 
     #[test]
     fn example_gamelog() {
-        let example = r#"[
+        let example = r#"
             {
-              "type": "start",
-              "game": {
-                "players": {
-                  "0": {
-                    "id": "0"
-                  },
-                  "1": {
-                    "id": "1"
-                  },
-                  "&LEN": 2
-                },
-                "gameObjects": {
-                  "0": {
-                    "id": "0",
-                    "gameObjectName": "Player",
-                    "logs": {
-                      "&LEN": 0
+              "gameName": "Move",
+              "gameSession": "2",
+              "deltas": [
+                {
+                  "type": "start",
+                  "game": {
+                    "players": {
+                      "0": {
+                        "id": "0"
+                      },
+                      "1": {
+                        "id": "1"
+                      },
+                      "&LEN": 2
                     },
-                    "clientType": "Lua",
-                    "lost": false,
-                    "name": "Move Lua Player",
-                    "otherPlayer": {
-                      "id": "1"
+                    "gameObjects": {
+                      "0": {
+                        "id": "0",
+                        "gameObjectName": "Player",
+                        "logs": {
+                          "&LEN": 0
+                        },
+                        "clientType": "Lua",
+                        "lost": false,
+                        "name": "Move Lua Player",
+                        "otherPlayer": {
+                          "id": "1"
+                        },
+                        "reasonLost": "",
+                        "reasonWon": "",
+                        "timeRemaining": 60000000000,
+                        "won": false
+                      },
+                      "1": {
+                        "id": "1",
+                        "gameObjectName": "Player",
+                        "logs": {
+                          "&LEN": 0
+                        },
+                        "clientType": "JavaScript",
+                        "lost": false,
+                        "name": "Move JavaScript Player",
+                        "otherPlayer": {
+                          "id": "0"
+                        },
+                        "reasonLost": "",
+                        "reasonWon": "",
+                        "timeRemaining": 60000000000,
+                        "won": false
+                      },
+                      "2": {
+                        "id": "2",
+                        "gameObjectName": "Unit",
+                        "logs": {
+                          "&LEN": 0
+                        },
+                        "hasMoved": false,
+                        "owner": {
+                          "id": "0"
+                        },
+                        "x": 8,
+                        "y": 8
+                      },
+                      "3": {
+                        "id": "3",
+                        "gameObjectName": "Unit",
+                        "logs": {
+                          "&LEN": 0
+                        },
+                        "hasMoved": false,
+                        "owner": {
+                          "id": "1"
+                        },
+                        "x": 9,
+                        "y": 10
+                      }
                     },
-                    "reasonLost": "",
-                    "reasonWon": "",
-                    "timeRemaining": 60000000000,
-                    "won": false
-                  },
-                  "1": {
-                    "id": "1",
-                    "gameObjectName": "Player",
-                    "logs": {
-                      "&LEN": 0
-                    },
-                    "clientType": "JavaScript",
-                    "lost": false,
-                    "name": "Move JavaScript Player",
-                    "otherPlayer": {
+                    "session": "2",
+                    "name": "Move",
+                    "currentTurn": 0,
+                    "maxTurns": 100,
+                    "currentPlayer": {
                       "id": "0"
                     },
-                    "reasonLost": "",
-                    "reasonWon": "",
-                    "timeRemaining": 60000000000,
-                    "won": false
-                  },
-                  "2": {
-                    "id": "2",
-                    "gameObjectName": "Unit",
-                    "logs": {
-                      "&LEN": 0
-                    },
-                    "hasMoved": false,
-                    "owner": {
+                    "units": {
+                      "0": {
+                        "id": "2"
+                      },
+                      "1": {
+                        "id": "3"
+                      },
+                      "&LEN": 2
+                    }
+                  }
+                },
+                {
+                  "type": "ran",
+                  "data": {
+                    "player": {
                       "id": "0"
                     },
-                    "x": 8,
-                    "y": 8
-                  },
-                  "3": {
-                    "id": "3",
-                    "gameObjectName": "Unit",
-                    "logs": {
-                      "&LEN": 0
+                    "run": {
+                      "functionName": "move",
+                      "caller": {
+                        "id": "2"
+                      },
+                      "args": {
+                        "y": 9,
+                        "x": 9
+                      }
                     },
-                    "hasMoved": false,
-                    "owner": {
+                    "returned": true
+                  },
+                  "game": {
+                    "gameObjects": {
+                      "0": {
+                        "timeRemaining": 59998045033
+                      },
+                      "2": {
+                        "x": 9,
+                        "y": 9,
+                        "hasMoved": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "finished",
+                  "data": {
+                    "player": {
+                      "id": "0"
+                    },
+                    "order": "runTurn",
+                    "returned": true
+                  },
+                  "game": {
+                    "gameObjects": {
+                      "0": {
+                        "timeRemaining": 59959439522
+                      },
+                      "1": {
+                        "timeRemaining": 60100000000
+                      },
+                      "2": {
+                        "hasMoved": false
+                      }
+                    },
+                    "currentTurn": 1,
+                    "currentPlayer": {
+                      "id": "1"
+                    }
+                  }
+                },
+                {
+                  "type": "ran",
+                  "data": {
+                    "player": {
                       "id": "1"
                     },
-                    "x": 9,
-                    "y": 10
+                    "run": {
+                      "functionName": "move",
+                      "caller": {
+                        "id": "3"
+                      },
+                      "args": {
+                        "y": 9,
+                        "x": 9
+                      }
+                    },
+                    "returned": true
+                  },
+                  "game": {
+                    "gameObjects": {
+                      "0": {
+                        "lost": true,
+                        "reasonLost": "Got moved on."
+                      },
+                      "1": {
+                        "timeRemaining": 60099785443,
+                        "won": true,
+                        "reasonWon": "Moved to other unit."
+                      },
+                      "2": {
+                        "x": -1,
+                        "y": -1
+                      },
+                      "3": {
+                        "y": 9,
+                        "hasMoved": true
+                      }
+                    }
                   }
                 },
-                "session": "2",
-                "name": "Move",
-                "currentTurn": 0,
-                "maxTurns": 100,
-                "currentPlayer": {
-                  "id": "0"
-                },
-                "units": {
-                  "0": {
-                    "id": "2"
-                  },
-                  "1": {
-                    "id": "3"
-                  },
-                  "&LEN": 2
+                {
+                  "type": "over",
+                  "game": {}
                 }
-              }
-            },
-            {
-              "type": "ran",
-              "data": {
-                "player": {
-                  "id": "0"
-                },
-                "run": {
-                  "functionName": "move",
-                  "caller": {
-                    "id": "2"
-                  },
-                  "args": {
-                    "y": 9,
-                    "x": 9
-                  }
-                },
-                "returned": true
+              ],
+              "constants": {
+                "DELTA_REMOVED": "&RM",
+                "DELTA_LIST_LENGTH": "&LEN"
               },
-              "game": {
-                "gameObjects": {
-                  "0": {
-                    "timeRemaining": 59998045033
-                  },
-                  "2": {
-                    "x": 9,
-                    "y": 9,
-                    "hasMoved": true
-                  }
+              "epoch": 1456434830562,
+              "randomSeed": "1xftop9ya3piudi",
+              "winners": [
+                {
+                  "index": 1,
+                  "id": "1",
+                  "name": "Move Lua Player"
                 }
-              }
-            },
-            {
-              "type": "finished",
-              "data": {
-                "player": {
-                  "id": "0"
-                },
-                "order": "runTurn",
-                "returned": true
-              },
-              "game": {
-                "gameObjects": {
-                  "0": {
-                    "timeRemaining": 59959439522
-                  },
-                  "1": {
-                    "timeRemaining": 60100000000
-                  },
-                  "2": {
-                    "hasMoved": false
-                  }
-                },
-                "currentTurn": 1,
-                "currentPlayer": {
-                  "id": "1"
+              ],
+              "losers": [
+                {
+                  "index": 0,
+                  "id": "0",
+                  "name": "Move Lua Player"
                 }
-              }
-            },
-            {
-              "type": "ran",
-              "data": {
-                "player": {
-                  "id": "1"
-                },
-                "run": {
-                  "functionName": "move",
-                  "caller": {
-                    "id": "3"
-                  },
-                  "args": {
-                    "y": 9,
-                    "x": 9
-                  }
-                },
-                "returned": true
-              },
-              "game": {
-                "gameObjects": {
-                  "0": {
-                    "lost": true,
-                    "reasonLost": "Got moved on."
-                  },
-                  "1": {
-                    "timeRemaining": 60099785443,
-                    "won": true,
-                    "reasonWon": "Moved to other unit."
-                  },
-                  "2": {
-                    "x": -1,
-                    "y": -1
-                  },
-                  "3": {
-                    "y": 9,
-                    "hasMoved": true
-                  }
-                }
-              }
-            },
-            {
-              "type": "over",
-              "game": {}
+              ]
             }
-          ]"#;
+        "#;
 
-        let deltas: Vec<Delta<GameObject>> = from_str(example)
+        let gamelog: Gamelog<GameObject> = from_str(example)
             .expect("parsing error");
-        eprintln!("{:#?}", deltas);
+        eprintln!("{:#?}", gamelog);
     }
 }
