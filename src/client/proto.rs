@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,7 +31,7 @@ pub enum ClientEvent {
     /// The Client tells the server it wants to play some game in some session. Once this occurs
     /// the server should soon after reply that it has been moved to some game lobby waiting for
     /// that game to starting playing.
-    /// 
+    ///
     /// # Example
     ///
     /// ```json
@@ -95,10 +95,10 @@ pub enum ClientEvent {
 
     /// Sent from a client to the server as the result of an "order" event. This is basically the
     /// return event from said order.
-    /// 
-    /// 
+    ///
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "finished",
@@ -122,7 +122,7 @@ pub enum ClientEvent {
     /// such as a "delta" for how this ran changed the game state.
     ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "run",
@@ -159,11 +159,11 @@ pub enum ClientEvent {
 pub enum ServerEvent {
     /// Sent back from a client event "alias" to name the sent alias. Sends back `data` that is a
     /// string of the actual name (id).
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// Server --> Client:
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "named",
@@ -175,14 +175,14 @@ pub enum ServerEvent {
     /// This should be sent after a client sends a "play" event, notifying them they are in a lobby
     /// waiting for the game to start. After this event clients should wait for a "start" even to
     /// be sent from the server when the game starts.
-    /// 
+    ///
     /// After this point the game client should have enough information to initialize classes for
     /// its AI and Game instances.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// Server --> Client:
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "lobbied",
@@ -216,11 +216,11 @@ pub enum ServerEvent {
     /// predicted, as it depends wholly on the game being played's structure, and what changed.
     /// Delta merging is a crucial concept to understand to merge game states, that is outside the
     /// scope of this document.
-    /// 
+    ///
     /// The `data` property will always be an object that represents the game's current state, but
     /// that object will only contain changed keys/values. Clients should be able to delta merge
     /// that object on top of the current Game.
-    /// 
+    ///
     /// __Note__: This event will occur while game play is occurring, but it will also be sent
     /// _once_ before. Right before the "start" event is sent, this initial "delta" event can be
     /// seen as a change in state of the game from un-started to the initial game state.
@@ -231,12 +231,12 @@ pub enum ServerEvent {
     /// and game should shift to Game mode, where events are exchanged quickly to do gameplay. All
     /// prior events not marked Client/Server Game Event, are no longer valid and will never be
     /// seen again.
-    /// 
+    ///
     /// The sent data is optional. If it is sent it contains game information pertinent to only
     /// your client.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event":"start",
@@ -257,9 +257,9 @@ pub enum ServerEvent {
     /// can think of this as the server telling the client to run a function and send back the
     /// result. While the order is happening clients may send certain "run" events depending on the
     /// game.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event":"order",
@@ -286,9 +286,9 @@ pub enum ServerEvent {
     /// The response to a client's run event. This occurs once it has been, well, ran. The `data`
     /// send from this is optional. If the requested 'run' would have a return value, that is sent
     /// as the `data` value for this command.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "ran",
@@ -302,12 +302,12 @@ pub enum ServerEvent {
     /// GameObject they do not own. These should result in printing a yellow message telling the
     /// coder why the run is invalid. The message will be in the `data` part of the event as a
     /// stand alone key `message`.
-    /// 
+    ///
     /// _Note_: a "ran" even will still be sent back after the "invalid" event. This is an
     /// _additional_ event.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event":"invalid",
@@ -317,26 +317,24 @@ pub enum ServerEvent {
     /// }
     /// ```
     #[serde(rename_all = "camelCase")]
-    Invalid {
-        message: String,
-    },
+    Invalid { message: String },
 
     /// This occurs when the game is over. Once this event is sent no further events can be sent
     /// from either party. In addition the game server will disconnect automatically.
-    /// 
+    ///
     /// With the game being over, the last state received should have players set if they won or
     /// lost. That data is not directly sent in this event however.
-    /// 
+    ///
     /// # `data` options
-    /// 
+    ///
     /// The entire `data` object is optional, but game servers may elect to send additional
     /// meta-data about the end of the game, such as gamelog information. Because the game server's
     /// hostname may vary from client to client, any strings with the term `__HOSTNAME__` in them
     /// should have that substring replaced by the hostname they used to connect to the game
     /// server. This is expected client side behavior.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "over",
@@ -350,11 +348,19 @@ pub enum ServerEvent {
     #[serde(rename_all = "camelCase")]
     Over {
         /// The url to the gamelog, in case it needs to be downloaded.
-        #[serde(rename = "gamelogURL", default, skip_serializing_if = "Option::is_none")]
+        #[serde(
+            rename = "gamelogURL",
+            default,
+            skip_serializing_if = "Option::is_none"
+        )]
         gamelog_url: Option<String>,
 
         /// The url to the visualizer which will download the gamelog and play it back.
-        #[serde(rename = "visualizerURL", default, skip_serializing_if = "Option::is_none")]
+        #[serde(
+            rename = "visualizerURL",
+            default,
+            skip_serializing_if = "Option::is_none"
+        )]
         visualizer_url: Option<String>,
 
         /// A message to display to the coder running the client. It will probably tell them that
@@ -367,9 +373,9 @@ pub enum ServerEvent {
     /// was thrown on the server for some reason, and it could not recover. The game server
     /// disconnects after this message, but at least the game clients are given some reason why
     /// they were disconnected unexpectedly.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```json
     /// {
     ///     "event": "fatal",
