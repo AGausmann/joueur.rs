@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::{fmt, ops};
@@ -201,11 +200,7 @@ where
     T::Owned: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "{:#?}", self.0)
-        } else {
-            write!(f, "{:?}", self.0)
-        }
+        fmt::Debug::fmt(&self.0, f)
     }
 }
 
