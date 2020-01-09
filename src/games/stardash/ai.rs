@@ -9,16 +9,16 @@ pub struct AI {
 
 impl AI {
 
-    /// This is called every time it is this AI.player's turn to make a move.
+    /// This is called every time it is this AI.player's turn.
     ///
     /// # Returns
     ///
-    /// A string in Standard Algebraic Notation (SAN) for the move you want to make. If the move is
-    /// invalid or not properly formatted you will lose the game.
-    pub fn make_move(
+    /// Represents if you want to end your turn. True means end your turn, False means to keep your
+    /// turn going and re-call this function.
+    pub fn run_turn(
         &self,
     )
-        -> Str
+        -> bool
     {
         unimplemented!()
     }

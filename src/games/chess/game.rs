@@ -26,7 +26,7 @@ impl Game {
         unimplemented!()
     }
 
-    /// The list of [known] moves that have occured in the game, in Standard Algebriac Notation
+    /// The list of [known] moves that have occurred in the game, in Standard Algebraic Notation
     /// (SAN) format. The first element is the first move, with the last being the most recent.
     pub fn history(&self) -> List<Str> {
         unimplemented!()
