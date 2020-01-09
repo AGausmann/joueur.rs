@@ -2,7 +2,12 @@
 //! IO](https://github.com/siggame/Cadre/blob/master/client-server-io.md) documentation.
 
 use std::collections::HashMap;
+use std::io::{self, BufRead, Write};
+use std::marker::PhantomData;
+use std::time::UNIX_EPOCH;
 
+use serde::de::DeserializeOwned;
+use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -402,4 +407,81 @@ pub struct Message<T> {
 
     /// The duration, in seconds, from Unix epoch to the time that this message was sent.
     pub sent_time: u64,
+}
+
+const EOT: u8 = 0x04;
+
+/// Reads and parses events from a stream that conforms to the Cadre game server protocol.
+#[derive(Debug)]
+pub struct EventStream<R, T> {
+    split: io::Split<R>,
+    _t: PhantomData<T>,
+}
+
+impl<R, T> EventStream<R, T>
+where
+    R: BufRead,
+    T: DeserializeOwned,
+{
+    /// Wraps the given reader.
+    pub fn new(buf_read: R) -> EventStream<R, T> {
+        EventStream {
+            split: buf_read.split(EOT),
+            _t: PhantomData,
+        }
+    }
+
+    /// Receives the next event if one is available.
+    pub fn recv(&mut self) -> Option<io::Result<T>> {
+        self.split.next().map(|result| {
+            result.and_then(|bytes| serde_json::from_slice(&bytes).map_err(Into::into))
+        })
+    }
+}
+
+impl<R, T> Iterator for EventStream<R, T>
+where
+    R: BufRead,
+    T: DeserializeOwned,
+{
+    type Item = io::Result<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.recv()
+    }
+}
+
+/// An event serializer/writer that conforms to the Cadre game server protocol.
+#[derive(Debug)]
+pub struct EventSink<W, T> {
+    write: W,
+    _t: PhantomData<T>,
+}
+
+impl<W, T> EventSink<W, T>
+where
+    W: Write,
+{
+    /// Wraps the given writer.
+    pub fn new(write: W) -> EventSink<W, T> {
+        EventSink {
+            write,
+            _t: PhantomData,
+        }
+    }
+
+    /// Serializes and sends an event, adding a valid timestamp to the message.
+    pub fn send(&mut self, event: T) -> io::Result<()>
+    where
+        T: Serialize,
+    {
+        let message = Message {
+            event,
+            sent_time: UNIX_EPOCH.elapsed().expect("invalid system time").as_secs(),
+        };
+        serde_json::to_writer(&mut self.write, &message)?;
+        self.write.write_all(&[EOT])?;
+        self.write.flush()?;
+        Ok(())
+    }
 }
