@@ -432,11 +432,13 @@ where
     }
 
     /// Receives the next event if one is available.
-    pub fn recv(&mut self) -> Option<io::Result<T>> {
-        self.split.next().map(|result| {
-            result.and_then(|bytes| serde_json::from_slice(&bytes).map_err(Into::into))
-        })
+    pub fn recv(&mut self) -> Option<Result<T, Error>> {
+        self.split.next().map(parse_event)
     }
+}
+
+fn parse_event<T: DeserializeOwned>(result: io::Result<Vec<u8>>) -> Result<T, Error> {
+    Ok(serde_json::from_slice(&result?)?)
 }
 
 impl<R, T> Iterator for EventStream<R, T>
@@ -444,7 +446,7 @@ where
     R: BufRead,
     T: DeserializeOwned,
 {
-    type Item = io::Result<T>;
+    type Item = Result<T, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.recv()
@@ -471,7 +473,7 @@ where
     }
 
     /// Serializes and sends an event, adding a valid timestamp to the message.
-    pub fn send(&mut self, event: T) -> io::Result<()>
+    pub fn send(&mut self, event: T) -> Result<(), Error>
     where
         T: Serialize,
     {
@@ -483,5 +485,22 @@ where
         self.write.write_all(&[EOT])?;
         self.write.flush()?;
         Ok(())
+    }
+}
+
+pub enum Error {
+    Io(io::Error),
+    Json(serde_json::Error),
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::Io(err)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(err: serde_json::Error) -> Error {
+        Error::Json(err)
     }
 }
