@@ -1,13 +1,11 @@
 use std::env;
-use std::error::Error as StdError;
-use std::fmt;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::net::TcpStream;
 use std::process::exit;
 
 use joueur::client::exit::Exit;
-use joueur::client::proto::{self, ClientEvent, EventSink, EventStream, ServerEvent};
-use serde_json::error::Category;
+use joueur::client::proto::{ClientEvent, EventSink, EventStream, ServerEvent};
+use joueur::error::Error;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -53,18 +51,19 @@ struct Args {
 }
 
 fn main_sub() -> Result<(), Error> {
-    let args = Args::from_iter_safe(env::args_os()).map_err(|e| (Exit::InvalidArgs, e))?;
+    let args = Args::from_iter_safe(env::args_os())?;
 
     let mut server_parts = args.server.split(":");
     let server_name = server_parts.next().unwrap();
     let server_port = match server_parts.next() {
-        Some(port_str) => port_str.parse().map_err(|e| (Exit::InvalidArgs, e))?,
+        Some(port_str) => port_str
+            .parse()
+            .map_err(|e| Error::from_error(e).with_exit(Exit::InvalidArgs))?,
         None => args.port,
     };
 
-    let socket =
-        TcpStream::connect((server_name, server_port)).map_err(|e| (Exit::CouldNotConnect, e))?;
-    let read_half = socket.try_clone().map_err(|e| (Exit::CouldNotConnect, e))?;
+    let socket = TcpStream::connect((server_name, server_port))?;
+    let read_half = socket.try_clone()?;
     let write_half = socket;
 
     let mut stream: EventStream<_, ServerEvent> = EventStream::new(BufReader::new(PrintRead {
@@ -126,86 +125,6 @@ fn unexpected_event(event: ServerEvent) -> Error {
     }
 }
 
-#[derive(Debug)]
-struct Error {
-    source: Option<Box<dyn StdError>>,
-    exit: Option<Exit>,
-}
-
-impl Error {
-    fn exit_code(&self) -> i32 {
-        match &self.exit {
-            Some(exit) => exit.code(),
-            None => 1,
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match (&self.source, &self.exit) {
-            (Some(source), Some(exit)) => write!(f, "{}: {}", exit, source),
-            (Some(source), None) => write!(f, "{}", source),
-            (None, Some(exit)) => write!(f, "{}", exit),
-            (None, None) => write!(f, "unknown error"),
-        }
-    }
-}
-
-impl<E> From<(Exit, E)> for Error
-where
-    E: Into<Box<dyn StdError>>,
-{
-    fn from((exit, err): (Exit, E)) -> Error {
-        Error {
-            source: Some(err.into()),
-            exit: Some(exit),
-        }
-    }
-}
-
-impl From<Exit> for Error {
-    fn from(exit: Exit) -> Error {
-        Error {
-            source: None,
-            exit: Some(exit),
-        }
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        use io::ErrorKind::*;
-        match err.kind() {
-            NotConnected => Exit::CouldNotConnect.into(),
-            ConnectionAborted | ConnectionReset | BrokenPipe => {
-                (Exit::DisconnectedUnexpectedly, err).into()
-            }
-            TimedOut => Exit::ServerTimeout.into(),
-            _ => (Exit::CannotReadSocket, err).into(),
-        }
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Error {
-        match err.classify() {
-            Category::Io | Category::Eof => io::Error::from(err).into(),
-            Category::Syntax => (Exit::MalformedJson, err).into(),
-            Category::Data => (Exit::UnknownEventFromServer, err).into(),
-        }
-    }
-}
-
-impl From<proto::Error> for Error {
-    fn from(err: proto::Error) -> Error {
-        match err {
-            proto::Error::Io(err) => err.into(),
-            proto::Error::Json(err) => err.into(),
-        }
-    }
-}
-
 struct PrintRead<R> {
     read: R,
     print_io: bool,
@@ -252,7 +171,7 @@ fn main() -> ! {
         Ok(()) => 0,
         Err(err) => {
             eprintln!("{}", err);
-            err.exit_code()
+            err.exit().map(|ex| ex.code()).unwrap_or(1)
         }
     };
     exit(exit_code);

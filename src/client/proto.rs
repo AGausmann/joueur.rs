@@ -6,6 +6,8 @@ use std::io::{self, BufRead, Write};
 use std::marker::PhantomData;
 use std::time::UNIX_EPOCH;
 
+use crate::error::Error;
+
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use serde_derive::{Deserialize, Serialize};
@@ -485,22 +487,5 @@ where
         self.write.write_all(&[EOT])?;
         self.write.flush()?;
         Ok(())
-    }
-}
-
-pub enum Error {
-    Io(io::Error),
-    Json(serde_json::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Error {
-        Error::Json(err)
     }
 }
