@@ -117,7 +117,7 @@ impl Forecast {
         self.context().try_get_obj(&self.id)
     }
 
-    pub fn cast<T>(&self) -> Option<T> {
+    pub fn cast<T>(&self) -> T {
         self.context().get_obj(&self.id)
     }
 }
