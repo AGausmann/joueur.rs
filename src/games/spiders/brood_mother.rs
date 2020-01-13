@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// The Spider Queen. She alone can spawn Spiderlings for each Player, and if she dies the owner
 /// loses.
@@ -114,11 +116,19 @@ impl BroodMother {
     /// True if the Spiderling was consumed. False otherwise.
     pub fn consume(
         &self,
-        _spiderling: &Spiderling,
+        spiderling: &Spiderling,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling: &'a Spiderling,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "consume", args)
     }
 
     /// Spawns a new Spiderling on the same Nest as this BroodMother, consuming an egg.
@@ -133,11 +143,19 @@ impl BroodMother {
     /// The newly spwaned Spiderling if successful. None otherwise.
     pub fn spawn(
         &self,
-        _spiderling_type: &str,
+        spiderling_type: &str,
     )
-        -> Option<Spiderling>
+        -> Result<Option<Spiderling>, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling_type: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling_type,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spawn", args)
     }
 
     /// _Inherited from GameObject_
@@ -150,10 +168,19 @@ impl BroodMother {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

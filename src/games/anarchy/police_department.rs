@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// Used to keep cities under control and raid Warehouses.
 #[derive(Debug, Clone)]
@@ -162,11 +164,19 @@ impl PoliceDepartment {
     /// The amount of damage dealt to the warehouse, or -1 if there was an error.
     pub fn raid(
         &self,
-        _warehouse: &Warehouse,
+        warehouse: &Warehouse,
     )
-        -> i64
+        -> Result<i64, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            warehouse: &'a Warehouse,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            warehouse,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "raid", args)
     }
 
     /// _Inherited from GameObject_
@@ -179,10 +189,19 @@ impl PoliceDepartment {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

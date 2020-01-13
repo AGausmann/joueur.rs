@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A checker on the game board.
 #[derive(Debug, Clone)]
@@ -104,12 +106,22 @@ impl Checker {
     /// Returns the same checker that moved if the move was successful. None otherwise.
     pub fn move_(
         &self,
-        _x: i64,
-        _y: i64,
+        x: i64,
+        y: i64,
     )
-        -> Option<Checker>
+        -> Result<Option<Checker>, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            x: i64,
+            y: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            x,
+            y,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Returns if the checker is owned by your player or not.
@@ -120,9 +132,15 @@ impl Checker {
     pub fn is_mine(
         &self,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "isMine", args)
     }
 
     /// _Inherited from GameObject_
@@ -135,10 +153,19 @@ impl Checker {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

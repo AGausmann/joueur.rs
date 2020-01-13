@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A port on a Tile.
 #[derive(Debug, Clone)]
@@ -104,11 +106,19 @@ impl Port {
     /// True if Unit was created successfully, false otherwise.
     pub fn spawn(
         &self,
-        _type_: &str,
+        type_: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            type_: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            type_,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spawn", args)
     }
 
     /// _Inherited from GameObject_
@@ -121,10 +131,19 @@ impl Port {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

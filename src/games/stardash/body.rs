@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A celestial body located within the game.
 #[derive(Debug, Clone)]
@@ -125,13 +127,25 @@ impl Body {
     /// True if successfully taken, false otherwise.
     pub fn spawn(
         &self,
-        _x: f64,
-        _y: f64,
-        _title: &str,
+        x: f64,
+        y: f64,
+        title: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            x: f64,
+            y: f64,
+            title: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            x,
+            y,
+            title,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spawn", args)
     }
 
     /// The x value of this body a number of turns from now. (0-how many you want).
@@ -145,11 +159,19 @@ impl Body {
     /// The x position of the body the input number of turns in the future.
     pub fn next_x(
         &self,
-        _num: i64,
+        num: i64,
     )
-        -> i64
+        -> Result<i64, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            num: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            num,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "nextX", args)
     }
 
     /// The x value of this body a number of turns from now. (0-how many you want).
@@ -163,11 +185,19 @@ impl Body {
     /// The x position of the body the input number of turns in the future.
     pub fn next_y(
         &self,
-        _num: i64,
+        num: i64,
     )
-        -> i64
+        -> Result<i64, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            num: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            num,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "nextY", args)
     }
 
     /// _Inherited from GameObject_
@@ -180,10 +210,19 @@ impl Body {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

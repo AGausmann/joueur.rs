@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A Spiderling that creates and spits new Webs from the Nest it is on to another Nest, connecting
 /// them.
@@ -149,11 +151,19 @@ impl Spitter {
     /// True if the spit was successful, false otherwise.
     pub fn spit(
         &self,
-        _nest: &Nest,
+        nest: &Nest,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            nest: &'a Nest,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            nest,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spit", args)
     }
 
     /// _Inherited from Spiderling_
@@ -169,11 +179,19 @@ impl Spitter {
     /// True if the move was successful, false otherwise.
     pub fn move_(
         &self,
-        _web: &Web,
+        web: &Web,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// _Inherited from Spiderling_
@@ -189,11 +207,19 @@ impl Spitter {
     /// True if the attack was successful, false otherwise.
     pub fn attack(
         &self,
-        _spiderling: &Spiderling,
+        spiderling: &Spiderling,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling: &'a Spiderling,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// _Inherited from GameObject_
@@ -206,10 +232,19 @@ impl Spitter {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

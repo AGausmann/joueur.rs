@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// An eager young person that wants to join your gang, and will call in the veteran Cowboys you
 /// need to win the brawl in the saloon.
@@ -105,11 +107,19 @@ impl YoungGun {
     /// until the turn ends. None otherwise.
     pub fn call_in(
         &self,
-        _job: &str,
+        job: &str,
     )
-        -> Option<Cowboy>
+        -> Result<Option<Cowboy>, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            job: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            job,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "callIn", args)
     }
 
     /// _Inherited from GameObject_
@@ -122,10 +132,19 @@ impl YoungGun {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

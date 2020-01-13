@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A Spider spawned by the BroodMother.
 #[derive(Debug, Clone)]
@@ -133,11 +135,19 @@ impl Spiderling {
     /// True if the move was successful, false otherwise.
     pub fn move_(
         &self,
-        _web: &Web,
+        web: &Web,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Attacks another Spiderling
@@ -151,11 +161,19 @@ impl Spiderling {
     /// True if the attack was successful, false otherwise.
     pub fn attack(
         &self,
-        _spiderling: &Spiderling,
+        spiderling: &Spiderling,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling: &'a Spiderling,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// _Inherited from GameObject_
@@ -168,10 +186,19 @@ impl Spiderling {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

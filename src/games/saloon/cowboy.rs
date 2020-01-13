@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A person on the map that can move around and interact within the saloon.
 #[derive(Debug, Clone)]
@@ -147,11 +149,19 @@ impl Cowboy {
     /// True if the move worked, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Sits down and plays a piano.
@@ -165,11 +175,19 @@ impl Cowboy {
     /// True if the play worked, false otherwise.
     pub fn play(
         &self,
-        _piano: &Furnishing,
+        piano: &Furnishing,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            piano: &'a Furnishing,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            piano,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "play", args)
     }
 
     /// Does their job's action on a Tile.
@@ -186,12 +204,22 @@ impl Cowboy {
     /// True if the act worked, false otherwise.
     pub fn act(
         &self,
-        _tile: &Tile,
-        _drunk_direction: &str,
+        tile: &Tile,
+        drunk_direction: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            drunk_direction: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            drunk_direction,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "act", args)
     }
 
     /// _Inherited from GameObject_
@@ -204,10 +232,19 @@ impl Cowboy {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

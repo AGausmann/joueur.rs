@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// Information about a beaver's job.
 #[derive(Debug, Clone)]
@@ -139,11 +141,19 @@ impl Job {
     /// The recruited Beaver if successful, None otherwise.
     pub fn recruit(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> Option<Beaver>
+        -> Result<Option<Beaver>, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "recruit", args)
     }
 
     /// _Inherited from GameObject_
@@ -156,10 +166,19 @@ impl Job {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A unit in the game. May be a worker, zombie, ghoul, hound, abomination, wraith or horseman.
 #[derive(Debug, Clone)]
@@ -114,11 +116,19 @@ impl Unit {
     /// True if successfully entered mine and began mining, false otherwise.
     pub fn mine(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "mine", args)
     }
 
     /// Stops adjacent to a river tile and begins fishing for mana.
@@ -132,11 +142,19 @@ impl Unit {
     /// True if successfully began fishing for mana, false otherwise.
     pub fn fish(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "fish", args)
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile.
@@ -150,11 +168,19 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Attacks an enemy tower on an adjacent tile.
@@ -168,11 +194,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Unit, if it is a worker, builds a tower on the tile it is on, only workers can do this.
@@ -186,11 +220,19 @@ impl Unit {
     /// True if successfully built, false otherwise.
     pub fn build(
         &self,
-        _title: &str,
+        title: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            title: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            title,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "build", args)
     }
 
     /// _Inherited from GameObject_
@@ -203,10 +245,19 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

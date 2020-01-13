@@ -75,7 +75,7 @@ if not 'rs' in shared:
 
         return result
 
-    def arg_type(ty):
+    def arg_type(ty, lifetime=None):
         name = ty['name']
 
         if name == 'null':
@@ -91,20 +91,20 @@ if not 'rs' in shared:
             result = 'f64'
 
         elif name == 'string':
-            result = ref('str')
+            result = ref('str', lifetime)
 
         elif name == 'list':
-            result = ref(slice(owned_type(ty['valueType'])))
+            result = ref(slice(owned_type(ty['valueType'])), lifetime)
 
         elif name == 'dictionary':
             result = ref(fish(
                 'Map',
                 owned_type(ty['keyType']),
                 owned_type(ty['valueType']),
-            ))
+            ), lifetime)
 
         elif ty['is_game_object']:
-            result = ref(name)
+            result = ref(name, lifetime)
 
         else:
             raise Exception(name)

@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// Can put out fires completely.
 #[derive(Debug, Clone)]
@@ -167,11 +169,19 @@ impl FireDepartment {
     /// True if the bribe worked, false otherwise.
     pub fn extinguish(
         &self,
-        _building: &Building,
+        building: &Building,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            building: &'a Building,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            building,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "extinguish", args)
     }
 
     /// _Inherited from GameObject_
@@ -184,10 +194,19 @@ impl FireDepartment {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

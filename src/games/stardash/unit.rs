@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A unit in the game. May be a corvette, missleboat, martyr, transport, miner.
 #[derive(Debug, Clone)]
@@ -183,13 +185,25 @@ impl Unit {
     /// True if successfully taken, false otherwise.
     pub fn transfer(
         &self,
-        _unit: &Unit,
-        _amount: i64,
-        _material: &str,
+        unit: &Unit,
+        amount: i64,
+        material: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            unit: &'a Unit,
+            amount: i64,
+            material: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            unit,
+            amount,
+            material,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "transfer", args)
     }
 
     /// Moves this Unit from its current location to the new location specified.
@@ -205,12 +219,22 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _x: f64,
-        _y: f64,
+        x: f64,
+        y: f64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            x: f64,
+            y: f64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            x,
+            y,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Attacks the specified unit.
@@ -224,11 +248,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _enemy: &Unit,
+        enemy: &Unit,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            enemy: &'a Unit,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            enemy,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Attacks the specified projectile.
@@ -242,11 +274,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn shootdown(
         &self,
-        _missile: &Projectile,
+        missile: &Projectile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            missile: &'a Projectile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            missile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "shootdown", args)
     }
 
     /// allows a miner to mine a asteroid
@@ -260,11 +300,19 @@ impl Unit {
     /// True if successfully acted, false otherwise.
     pub fn mine(
         &self,
-        _body: &Body,
+        body: &Body,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            body: &'a Body,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            body,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "mine", args)
     }
 
     /// tells you if your ship can move to that location from were it is without clipping the sun.
@@ -280,12 +328,22 @@ impl Unit {
     /// True if pathable by this unit, false otherwise.
     pub fn safe(
         &self,
-        _x: f64,
-        _y: f64,
+        x: f64,
+        y: f64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            x: f64,
+            y: f64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            x,
+            y,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "safe", args)
     }
 
     /// Causes the unit to dash towards the designated destination.
@@ -301,12 +359,22 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn dash(
         &self,
-        _x: f64,
-        _y: f64,
+        x: f64,
+        y: f64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            x: f64,
+            y: f64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            x,
+            y,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "dash", args)
     }
 
     /// _Inherited from GameObject_
@@ -319,10 +387,19 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

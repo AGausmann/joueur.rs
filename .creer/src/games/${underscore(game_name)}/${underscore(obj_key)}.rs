@@ -3,9 +3,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 % if obj_key == 'Game':
 /// Holds top-level game state and settings for the current game.
@@ -65,14 +67,28 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
     pub fn ${shared['rs']['sanitize'](underscore(func_name))}(
         &self,
 % for arg in func['arguments']:
-        _${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'])},
+        ${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'])},
 % endfor
     )
 % if func['returns']:
-        -> ${shared['rs']['return_type'](func['returns']['type'])}
+        -> Result<${shared['rs']['return_type'](func['returns']['type'])}, Error>
+% else:
+        -> Result<(), Error>
 % endif
     {
-        unimplemented!()
+        struct Args<'a> {
+% for arg in func['arguments']:
+            ${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'], 'a')},
+% endfor
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+% for arg in func['arguments']:
+            ${shared['rs']['sanitize'](underscore(arg['name']))},
+% endfor
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "${func_name}", args)
     }
 % endfor
 

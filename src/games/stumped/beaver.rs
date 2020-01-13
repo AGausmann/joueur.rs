@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A beaver in the game.
 #[derive(Debug, Clone)]
@@ -138,11 +140,19 @@ impl Beaver {
     /// True if the move worked, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Harvests the branches or food from a Spawner on an adjacent Tile.
@@ -156,11 +166,19 @@ impl Beaver {
     /// True if successfully harvested, false otherwise.
     pub fn harvest(
         &self,
-        _spawner: &Spawner,
+        spawner: &Spawner,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spawner: &'a Spawner,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spawner,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "harvest", args)
     }
 
     /// Attacks another adjacent beaver.
@@ -174,11 +192,19 @@ impl Beaver {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _beaver: &Beaver,
+        beaver: &Beaver,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            beaver: &'a Beaver,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            beaver,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Builds a lodge on the Beavers current Tile.
@@ -189,9 +215,15 @@ impl Beaver {
     pub fn build_lodge(
         &self,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "buildLodge", args)
     }
 
     /// Drops some of the given resource on the beaver's Tile.
@@ -211,13 +243,25 @@ impl Beaver {
     /// True if successfully dropped the resource, false otherwise.
     pub fn drop(
         &self,
-        _tile: &Tile,
-        _resource: &str,
-        _amount: i64,
+        tile: &Tile,
+        resource: &str,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            resource: &'a str,
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            resource,
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "drop", args)
     }
 
     /// Picks up some branches or food on the beaver's tile.
@@ -237,13 +281,25 @@ impl Beaver {
     /// True if successfully picked up a resource, false otherwise.
     pub fn pickup(
         &self,
-        _tile: &Tile,
-        _resource: &str,
-        _amount: i64,
+        tile: &Tile,
+        resource: &str,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            resource: &'a str,
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            resource,
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "pickup", args)
     }
 
     /// _Inherited from GameObject_
@@ -256,10 +312,19 @@ impl Beaver {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

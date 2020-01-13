@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A unit group in the game. This may consist of a ship and any number of crew.
 #[derive(Debug, Clone)]
@@ -148,11 +150,19 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Attacks either the 'crew' or 'ship' on a Tile in range.
@@ -169,12 +179,22 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
-        _target: &str,
+        tile: &Tile,
+        target: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            target: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            target,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Buries gold on this Unit's Tile. Gold must be a certain distance away for it to get
@@ -190,11 +210,19 @@ impl Unit {
     /// True if successfully buried, false otherwise.
     pub fn bury(
         &self,
-        _amount: i64,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "bury", args)
     }
 
     /// Digs up gold on this Unit's Tile.
@@ -209,11 +237,19 @@ impl Unit {
     /// True if successfully dug up, false otherwise.
     pub fn dig(
         &self,
-        _amount: i64,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "dig", args)
     }
 
     /// Puts gold into an adjacent Port. If that Port is the Player's port, the gold is added to
@@ -229,11 +265,19 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn deposit(
         &self,
-        _amount: i64,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "deposit", args)
     }
 
     /// Takes gold from the Player. You can only withdraw from your own Port.
@@ -247,11 +291,19 @@ impl Unit {
     /// True if successfully withdrawn, false otherwise.
     pub fn withdraw(
         &self,
-        _amount: i64,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "withdraw", args)
     }
 
     /// Moves a number of crew from this Unit to the given Tile. This will consume a move from
@@ -272,13 +324,25 @@ impl Unit {
     /// True if successfully split, false otherwise.
     pub fn split(
         &self,
-        _tile: &Tile,
-        _amount: i64,
-        _gold: i64,
+        tile: &Tile,
+        amount: i64,
+        gold: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            amount: i64,
+            gold: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            amount,
+            gold,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "split", args)
     }
 
     /// Regenerates this Unit's health. Must be used in range of a port.
@@ -289,9 +353,15 @@ impl Unit {
     pub fn rest(
         &self,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "rest", args)
     }
 
     /// _Inherited from GameObject_
@@ -304,10 +374,19 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

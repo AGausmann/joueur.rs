@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A unit in the game. May be a manager, intern, or physicist.
 #[derive(Debug, Clone)]
@@ -158,13 +160,25 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn drop(
         &self,
-        _tile: &Tile,
-        _amount: i64,
-        _material: &str,
+        tile: &Tile,
+        amount: i64,
+        material: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            amount: i64,
+            material: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            amount,
+            material,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "drop", args)
     }
 
     /// Picks up material at the units feet or adjacent tile.
@@ -184,13 +198,25 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn pickup(
         &self,
-        _tile: &Tile,
-        _amount: i64,
-        _material: &str,
+        tile: &Tile,
+        amount: i64,
+        material: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            amount: i64,
+            material: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            amount,
+            material,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "pickup", args)
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile.
@@ -204,11 +230,19 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Attacks a unit on an adjacent tile.
@@ -222,11 +256,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Makes the unit do something to a machine or unit adjacent to its tile. Interns sabotage,
@@ -241,11 +283,19 @@ impl Unit {
     /// True if successfully acted, false otherwise.
     pub fn act(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "act", args)
     }
 
     /// _Inherited from GameObject_
@@ -258,10 +308,19 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

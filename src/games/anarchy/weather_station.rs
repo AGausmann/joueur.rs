@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// Can be bribed to change the next Forecast in some way.
 #[derive(Debug, Clone)]
@@ -163,11 +165,19 @@ impl WeatherStation {
     /// True if the rotation worked, false otherwise.
     pub fn rotate(
         &self,
-        _counterclockwise: bool,
+        counterclockwise: bool,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            counterclockwise: bool,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            counterclockwise,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "rotate", args)
     }
 
     /// Bribe the weathermen to intensity the next Forecast by 1 or -1
@@ -182,11 +192,19 @@ impl WeatherStation {
     /// True if the intensity was changed, false otherwise.
     pub fn intensify(
         &self,
-        _negative: bool,
+        negative: bool,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            negative: bool,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            negative,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "intensify", args)
     }
 
     /// _Inherited from GameObject_
@@ -199,10 +217,19 @@ impl WeatherStation {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

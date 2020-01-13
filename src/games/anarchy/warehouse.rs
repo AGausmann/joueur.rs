@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A typical abandoned warehouse... that anarchists hang out in and can be bribed to burn down
 /// Buildings.
@@ -178,11 +180,19 @@ impl Warehouse {
     /// The exposure added to this Building's exposure. -1 is returned if there was an error.
     pub fn ignite(
         &self,
-        _building: &Building,
+        building: &Building,
     )
-        -> i64
+        -> Result<i64, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            building: &'a Building,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            building,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "ignite", args)
     }
 
     /// _Inherited from GameObject_
@@ -195,10 +205,19 @@ impl Warehouse {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

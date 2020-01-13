@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A unit in the game.
 #[derive(Debug, Clone)]
@@ -154,11 +156,19 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// Harvests the food on an adjacent Tile.
@@ -172,11 +182,19 @@ impl Unit {
     /// True if successfully harvested, false otherwise.
     pub fn harvest(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "harvest", args)
     }
 
     /// Attacks an adjacent Tile. Costs an action for each Unit in this Unit's squad. Units in the
@@ -192,11 +210,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// Converts an adjacent Unit to your side.
@@ -210,11 +236,19 @@ impl Unit {
     /// True if successfully converted, false otherwise.
     pub fn convert(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "convert", args)
     }
 
     /// Constructs a Structure on an adjacent Tile.
@@ -231,12 +265,22 @@ impl Unit {
     /// True if successfully constructed a structure, false otherwise.
     pub fn construct(
         &self,
-        _tile: &Tile,
-        _type_: &str,
+        tile: &Tile,
+        type_: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            type_: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            type_,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "construct", args)
     }
 
     /// Removes materials from an adjacent Tile's Structure. You cannot deconstruct friendly
@@ -251,11 +295,19 @@ impl Unit {
     /// True if successfully deconstructed, false otherwise.
     pub fn deconstruct(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "deconstruct", args)
     }
 
     /// Drops some of the given resource on or adjacent to the Unit's Tile. Does not count as an
@@ -275,13 +327,25 @@ impl Unit {
     /// True if successfully dropped the resource, false otherwise.
     pub fn drop(
         &self,
-        _tile: &Tile,
-        _resource: &str,
-        _amount: i64,
+        tile: &Tile,
+        resource: &str,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            resource: &'a str,
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            resource,
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "drop", args)
     }
 
     /// Picks up some materials or food on or adjacent to the Unit's Tile. Does not count as an
@@ -301,13 +365,25 @@ impl Unit {
     /// True if successfully picked up a resource, false otherwise.
     pub fn pickup(
         &self,
-        _tile: &Tile,
-        _resource: &str,
-        _amount: i64,
+        tile: &Tile,
+        resource: &str,
+        amount: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            resource: &'a str,
+            amount: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            resource,
+            amount,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "pickup", args)
     }
 
     /// Changes this Unit's Job. Must be at max energy (100.0) to change Jobs.
@@ -321,11 +397,19 @@ impl Unit {
     /// True if successfully changed Jobs, false otherwise.
     pub fn change_job(
         &self,
-        _job: &str,
+        job: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            job: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            job,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "changeJob", args)
     }
 
     /// Regenerates energy. Must be in range of a friendly shelter to rest. Costs an action. Units
@@ -337,9 +421,15 @@ impl Unit {
     pub fn rest(
         &self,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "rest", args)
     }
 
     /// _Inherited from GameObject_
@@ -352,10 +442,19 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

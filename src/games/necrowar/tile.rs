@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A Tile in the game that makes up the 2D map grid.
 #[derive(Debug, Clone)]
@@ -216,11 +218,19 @@ impl Tile {
     /// True if successful res, false otherwise.
     pub fn res(
         &self,
-        _num: i64,
+        num: i64,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            num: i64,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            num,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "res", args)
     }
 
     /// Spawns a fighting unit on the correct tile.
@@ -234,11 +244,19 @@ impl Tile {
     /// True if successfully spawned, false otherwise.
     pub fn spawn_unit(
         &self,
-        _title: &str,
+        title: &str,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            title: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            title,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spawnUnit", args)
     }
 
     /// Spawns a worker on the correct tile.
@@ -249,9 +267,15 @@ impl Tile {
     pub fn spawn_worker(
         &self,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "spawnWorker", args)
     }
 
     /// _Inherited from GameObject_
@@ -264,10 +288,19 @@ impl Tile {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {

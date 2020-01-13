@@ -2,9 +2,11 @@
 
 use std::sync::{Arc, Mutex, Weak};
 use std::cell::{RefCell, RefMut};
+use std::marker::PhantomData;
 
 use super::*;
 use crate::types::*;
+use crate::error::Error;
 
 /// A Spiderling that can alter existing Webs by weaving to add or remove silk from the Webs, thus
 /// altering its strength.
@@ -153,11 +155,19 @@ impl Weaver {
     /// True if the strengthen was successfully started, false otherwise.
     pub fn strengthen(
         &self,
-        _web: &Web,
+        web: &Web,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "strengthen", args)
     }
 
     /// Weaves more silk into an existing Web to strengthen it.
@@ -172,11 +182,19 @@ impl Weaver {
     /// True if the weaken was successfully started, false otherwise.
     pub fn weaken(
         &self,
-        _web: &Web,
+        web: &Web,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "weaken", args)
     }
 
     /// _Inherited from Spiderling_
@@ -192,11 +210,19 @@ impl Weaver {
     /// True if the move was successful, false otherwise.
     pub fn move_(
         &self,
-        _web: &Web,
+        web: &Web,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "move", args)
     }
 
     /// _Inherited from Spiderling_
@@ -212,11 +238,19 @@ impl Weaver {
     /// True if the attack was successful, false otherwise.
     pub fn attack(
         &self,
-        _spiderling: &Spiderling,
+        spiderling: &Spiderling,
     )
-        -> bool
+        -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling: &'a Spiderling,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "attack", args)
     }
 
     /// _Inherited from GameObject_
@@ -229,10 +263,19 @@ impl Weaver {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
+        -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.context().run(&self.id, "log", args)
     }
 
     pub fn try_cast<T>(&self) -> Option<T> {
