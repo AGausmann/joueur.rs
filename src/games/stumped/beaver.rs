@@ -1,63 +1,106 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A beaver in the game.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Beaver {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<BeaverInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct BeaverInner {
+    beaver: Arc<Mutex<BeaverBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct BeaverBase {
+    pub(crate) moves: i64,
+    pub(crate) owner: Player,
+    pub(crate) actions: i64,
+    pub(crate) tile: Option<Tile>,
+    pub(crate) health: i64,
+    pub(crate) turns_distracted: i64,
+    pub(crate) branches: i64,
+    pub(crate) food: i64,
+    pub(crate) job: Job,
+    pub(crate) recruited: bool,
 }
 
 impl Beaver {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<BeaverInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Beaver = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// How many moves this Beaver has left this turn.
     pub fn moves(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().moves.clone()
     }
 
     /// The Player that owns and can control this Beaver.
     pub fn owner(&self) -> Player {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().owner.clone()
     }
 
     /// The number of actions remaining for the Beaver this turn.
     pub fn actions(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().actions.clone()
     }
 
     /// The Tile this Beaver is on.
     pub fn tile(&self) -> Option<Tile> {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().tile.clone()
     }
 
     /// How much health this Beaver has left.
     pub fn health(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().health.clone()
     }
 
     /// Number of turns this Beaver is distracted for (0 means not distracted).
     pub fn turns_distracted(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().turns_distracted.clone()
     }
 
     /// The amount of branches this Beaver is holding.
     pub fn branches(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().branches.clone()
     }
 
     /// The amount of food this Beaver is holding.
     pub fn food(&self) -> i64 {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().food.clone()
     }
 
     /// The Job this Beaver was recruited to do.
     pub fn job(&self) -> Job {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().job.clone()
     }
 
     /// True if the Beaver has finished being recruited and can do things, False otherwise.
     pub fn recruited(&self) -> bool {
-        unimplemented!()
+        self.inner().beaver.lock().unwrap().recruited.clone()
     }
 
     /// _Inherited from GameObject_
@@ -65,7 +108,7 @@ impl Beaver {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -74,14 +117,14 @@ impl Beaver {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Moves this Beaver from its current Tile to an adjacent Tile.
@@ -93,7 +136,7 @@ impl Beaver {
     /// # Returns
     ///
     /// True if the move worked, false otherwise.
-    pub fn move_to(
+    pub fn move_(
         &self,
         _tile: &Tile,
     )
@@ -219,22 +262,11 @@ impl Beaver {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

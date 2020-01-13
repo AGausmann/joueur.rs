@@ -1,24 +1,61 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A Spiderling that can alter existing Webs by weaving to add or remove silk from the Webs, thus
 /// altering its strength.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Weaver {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<WeaverInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct WeaverInner {
+    weaver: Arc<Mutex<WeaverBase>>,
+    spiderling: Arc<Mutex<spiderling::SpiderlingBase>>,
+    spider: Arc<Mutex<spider::SpiderBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct WeaverBase {
+    pub(crate) strengthening_web: Option<Web>,
+    pub(crate) weakening_web: Option<Web>,
 }
 
 impl Weaver {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<WeaverInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Weaver = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The Web that this Weaver is strengthening. None if not strengthening.
     pub fn strengthening_web(&self) -> Option<Web> {
-        unimplemented!()
+        self.inner().weaver.lock().unwrap().strengthening_web.clone()
     }
 
     /// The Web that this Weaver is weakening. None if not weakening.
     pub fn weakening_web(&self) -> Option<Web> {
-        unimplemented!()
+        self.inner().weaver.lock().unwrap().weakening_web.clone()
     }
 
     /// _Inherited from Spiderling_
@@ -26,7 +63,7 @@ impl Weaver {
     /// When empty string this Spiderling is not busy, and can act. Otherwise a string representing
     /// what it is busy with, e.g. 'Moving', 'Attacking'.
     pub fn busy(&self) -> Str {
-        unimplemented!()
+        self.inner().spiderling.lock().unwrap().busy.clone()
     }
 
     /// _Inherited from Spiderling_
@@ -34,7 +71,7 @@ impl Weaver {
     /// How much work needs to be done for this Spiderling to finish being busy. See docs for the
     /// Work forumla.
     pub fn work_remaining(&self) -> f64 {
-        unimplemented!()
+        self.inner().spiderling.lock().unwrap().work_remaining.clone()
     }
 
     /// _Inherited from Spiderling_
@@ -42,42 +79,42 @@ impl Weaver {
     /// The number of Spiderlings busy with the same work this Spiderling is doing, speeding up the
     /// task.
     pub fn number_of_coworkers(&self) -> i64 {
-        unimplemented!()
+        self.inner().spiderling.lock().unwrap().number_of_coworkers.clone()
     }
 
     /// _Inherited from Spiderling_
     ///
     /// The Web this Spiderling is using to move. None if it is not moving.
     pub fn moving_on_web(&self) -> Option<Web> {
-        unimplemented!()
+        self.inner().spiderling.lock().unwrap().moving_on_web.clone()
     }
 
     /// _Inherited from Spiderling_
     ///
     /// The Nest this Spiderling is moving to. None if it is not moving.
     pub fn moving_to_nest(&self) -> Option<Nest> {
-        unimplemented!()
+        self.inner().spiderling.lock().unwrap().moving_to_nest.clone()
     }
 
     /// _Inherited from Spider_
     ///
     /// The Player that owns this Spider, and can command it.
     pub fn owner(&self) -> Player {
-        unimplemented!()
+        self.inner().spider.lock().unwrap().owner.clone()
     }
 
     /// _Inherited from Spider_
     ///
     /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
-        unimplemented!()
+        self.inner().spider.lock().unwrap().nest.clone()
     }
 
     /// _Inherited from Spider_
     ///
     /// If this Spider is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
-        unimplemented!()
+        self.inner().spider.lock().unwrap().is_dead.clone()
     }
 
     /// _Inherited from GameObject_
@@ -85,7 +122,7 @@ impl Weaver {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -94,14 +131,14 @@ impl Weaver {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Weaves more silk into an existing Web to strengthen it.
@@ -153,7 +190,7 @@ impl Weaver {
     /// # Returns
     ///
     /// True if the move was successful, false otherwise.
-    pub fn move_to(
+    pub fn move_(
         &self,
         _web: &Web,
     )
@@ -198,22 +235,11 @@ impl Weaver {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

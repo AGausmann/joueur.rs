@@ -33,6 +33,9 @@ if not 'rs' in shared:
     def hashmap(k, v):
         return fish('std::collections::HashMap', k, v)
 
+    def internal_type(ty):
+        return owned_type(ty)
+
     def owned_type(ty):
         name = ty['name']
 
@@ -129,9 +132,9 @@ if not 'rs' in shared:
 
     def sanitize(name):
         if name == 'move':
-            return 'move_to'
+            return 'move_'
         elif name == 'type':
-            return 'type_of'
+            return 'type_'
         else:
             return name
 
@@ -229,6 +232,7 @@ if not 'rs' in shared:
         return list(parents)
 
     shared['rs'] = {
+        'internal_type': internal_type,
         'return_type': return_type,
         'arg_type': arg_type,
         'default_value': default_value,

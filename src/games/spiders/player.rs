@@ -1,74 +1,119 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A player in this game. Every AI controls one player.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Player {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<PlayerInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct PlayerInner {
+    player: Arc<Mutex<PlayerBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct PlayerBase {
+    pub(crate) name: Str,
+    pub(crate) client_type: Str,
+    pub(crate) won: bool,
+    pub(crate) lost: bool,
+    pub(crate) reason_won: Str,
+    pub(crate) reason_lost: Str,
+    pub(crate) time_remaining: f64,
+    pub(crate) opponent: Player,
+    pub(crate) spiders: List<Spider>,
+    pub(crate) brood_mother: BroodMother,
+    pub(crate) max_spiderlings: i64,
+    pub(crate) number_of_nests_controlled: i64,
 }
 
 impl Player {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<PlayerInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Player = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The name of the player.
     pub fn name(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().name.clone()
     }
 
     /// What type of client this is, e.g. 'Python', 'JavaScript', or some other language. For
     /// potential data mining purposes.
     pub fn client_type(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().client_type.clone()
     }
 
     /// If the player won the game or not.
     pub fn won(&self) -> bool {
-        unimplemented!()
+        self.inner().player.lock().unwrap().won.clone()
     }
 
     /// If the player lost the game or not.
     pub fn lost(&self) -> bool {
-        unimplemented!()
+        self.inner().player.lock().unwrap().lost.clone()
     }
 
     /// The reason why the player won the game.
     pub fn reason_won(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().reason_won.clone()
     }
 
     /// The reason why the player lost the game.
     pub fn reason_lost(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().reason_lost.clone()
     }
 
     /// The amount of time (in ns) remaining for this AI to send commands.
     pub fn time_remaining(&self) -> f64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().time_remaining.clone()
     }
 
     /// This player's opponent in the game.
     pub fn opponent(&self) -> Player {
-        unimplemented!()
+        self.inner().player.lock().unwrap().opponent.clone()
     }
 
     /// All the Spiders owned by this player.
     pub fn spiders(&self) -> List<Spider> {
-        unimplemented!()
+        self.inner().player.lock().unwrap().spiders.clone()
     }
 
     /// This player's BroodMother. If it dies they lose the game.
     pub fn brood_mother(&self) -> BroodMother {
-        unimplemented!()
+        self.inner().player.lock().unwrap().brood_mother.clone()
     }
 
     /// The max number of Spiderlings players can spawn.
     pub fn max_spiderlings(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().max_spiderlings.clone()
     }
 
     /// The number of nests this player controls.
     pub fn number_of_nests_controlled(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().number_of_nests_controlled.clone()
     }
 
     /// _Inherited from GameObject_
@@ -76,7 +121,7 @@ impl Player {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -85,14 +130,14 @@ impl Player {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// _Inherited from GameObject_
@@ -111,22 +156,11 @@ impl Player {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

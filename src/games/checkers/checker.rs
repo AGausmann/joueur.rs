@@ -1,33 +1,70 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A checker on the game board.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Checker {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<CheckerInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct CheckerInner {
+    checker: Arc<Mutex<CheckerBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct CheckerBase {
+    pub(crate) owner: Player,
+    pub(crate) x: i64,
+    pub(crate) y: i64,
+    pub(crate) kinged: bool,
 }
 
 impl Checker {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<CheckerInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Checker = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The player that controls this Checker.
     pub fn owner(&self) -> Player {
-        unimplemented!()
+        self.inner().checker.lock().unwrap().owner.clone()
     }
 
     /// The x coordinate of the checker.
     pub fn x(&self) -> i64 {
-        unimplemented!()
+        self.inner().checker.lock().unwrap().x.clone()
     }
 
     /// The y coordinate of the checker.
     pub fn y(&self) -> i64 {
-        unimplemented!()
+        self.inner().checker.lock().unwrap().y.clone()
     }
 
     /// If the checker has been kinged and can move backwards.
     pub fn kinged(&self) -> bool {
-        unimplemented!()
+        self.inner().checker.lock().unwrap().kinged.clone()
     }
 
     /// _Inherited from GameObject_
@@ -35,7 +72,7 @@ impl Checker {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -44,14 +81,14 @@ impl Checker {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Moves the checker from its current location to the given (x, y).
@@ -65,7 +102,7 @@ impl Checker {
     /// # Returns
     ///
     /// Returns the same checker that moved if the move was successful. None otherwise.
-    pub fn move_to(
+    pub fn move_(
         &self,
         _x: i64,
         _y: i64,
@@ -104,22 +141,11 @@ impl Checker {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

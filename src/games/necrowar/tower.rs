@@ -1,43 +1,82 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A tower in the game. Used to combat enemy waves.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Tower {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<TowerInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct TowerInner {
+    tower: Arc<Mutex<TowerBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct TowerBase {
+    pub(crate) owner: Option<Player>,
+    pub(crate) tile: Tile,
+    pub(crate) job: TowerJob,
+    pub(crate) health: i64,
+    pub(crate) attacked: bool,
+    pub(crate) cooldown: i64,
 }
 
 impl Tower {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<TowerInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Tower = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The player that built / owns this tower.
     pub fn owner(&self) -> Option<Player> {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().owner.clone()
     }
 
     /// The Tile this Tower is on.
     pub fn tile(&self) -> Tile {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().tile.clone()
     }
 
     /// What type of tower this is (it's job).
     pub fn job(&self) -> TowerJob {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().job.clone()
     }
 
     /// How much remaining health this tower has.
     pub fn health(&self) -> i64 {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().health.clone()
     }
 
     /// Whether this tower has attacked this turn or not.
     pub fn attacked(&self) -> bool {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().attacked.clone()
     }
 
     /// How many turns are left before it can fire again.
     pub fn cooldown(&self) -> i64 {
-        unimplemented!()
+        self.inner().tower.lock().unwrap().cooldown.clone()
     }
 
     /// _Inherited from GameObject_
@@ -45,7 +84,7 @@ impl Tower {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -54,14 +93,14 @@ impl Tower {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Attacks an enemy unit on an tile within it's range.
@@ -98,22 +137,11 @@ impl Tower {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

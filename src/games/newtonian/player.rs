@@ -1,96 +1,145 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A player in this game. Every AI controls one player.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Player {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<PlayerInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct PlayerInner {
+    player: Arc<Mutex<PlayerBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct PlayerBase {
+    pub(crate) name: Str,
+    pub(crate) client_type: Str,
+    pub(crate) won: bool,
+    pub(crate) lost: bool,
+    pub(crate) reason_won: Str,
+    pub(crate) reason_lost: Str,
+    pub(crate) time_remaining: f64,
+    pub(crate) opponent: Player,
+    pub(crate) units: List<Unit>,
+    pub(crate) heat: i64,
+    pub(crate) pressure: i64,
+    pub(crate) intern_spawn: i64,
+    pub(crate) physicist_spawn: i64,
+    pub(crate) manager_spawn: i64,
+    pub(crate) spawn_tiles: List<Tile>,
+    pub(crate) generator_tiles: List<Tile>,
 }
 
 impl Player {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<PlayerInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Player = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The name of the player.
     pub fn name(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().name.clone()
     }
 
     /// What type of client this is, e.g. 'Python', 'JavaScript', or some other language. For
     /// potential data mining purposes.
     pub fn client_type(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().client_type.clone()
     }
 
     /// If the player won the game or not.
     pub fn won(&self) -> bool {
-        unimplemented!()
+        self.inner().player.lock().unwrap().won.clone()
     }
 
     /// If the player lost the game or not.
     pub fn lost(&self) -> bool {
-        unimplemented!()
+        self.inner().player.lock().unwrap().lost.clone()
     }
 
     /// The reason why the player won the game.
     pub fn reason_won(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().reason_won.clone()
     }
 
     /// The reason why the player lost the game.
     pub fn reason_lost(&self) -> Str {
-        unimplemented!()
+        self.inner().player.lock().unwrap().reason_lost.clone()
     }
 
     /// The amount of time (in ns) remaining for this AI to send commands.
     pub fn time_remaining(&self) -> f64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().time_remaining.clone()
     }
 
     /// This player's opponent in the game.
     pub fn opponent(&self) -> Player {
-        unimplemented!()
+        self.inner().player.lock().unwrap().opponent.clone()
     }
 
     /// Every Unit owned by this Player.
     pub fn units(&self) -> List<Unit> {
-        unimplemented!()
+        self.inner().player.lock().unwrap().units.clone()
     }
 
     /// The amount of heat this Player has.
     pub fn heat(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().heat.clone()
     }
 
     /// The amount of pressure this Player has.
     pub fn pressure(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().pressure.clone()
     }
 
     /// The time left till a intern spawns. (0 to spawnTime).
     pub fn intern_spawn(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().intern_spawn.clone()
     }
 
     /// The time left till a physicist spawns. (0 to spawnTime).
     pub fn physicist_spawn(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().physicist_spawn.clone()
     }
 
     /// The time left till a manager spawns. (0 to spawnTime).
     pub fn manager_spawn(&self) -> i64 {
-        unimplemented!()
+        self.inner().player.lock().unwrap().manager_spawn.clone()
     }
 
     /// All the tiles this Player's units can spawn on. (listed from the outer edges inward, from
     /// top to bottom).
     pub fn spawn_tiles(&self) -> List<Tile> {
-        unimplemented!()
+        self.inner().player.lock().unwrap().spawn_tiles.clone()
     }
 
     /// Every generator Tile owned by this Player. (listed from the outer edges inward, from top to
     /// bottom).
     pub fn generator_tiles(&self) -> List<Tile> {
-        unimplemented!()
+        self.inner().player.lock().unwrap().generator_tiles.clone()
     }
 
     /// _Inherited from GameObject_
@@ -98,7 +147,7 @@ impl Player {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -107,14 +156,14 @@ impl Player {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// _Inherited from GameObject_
@@ -133,22 +182,11 @@ impl Player {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

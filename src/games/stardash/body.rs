@@ -1,49 +1,89 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A celestial body located within the game.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Body {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<BodyInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct BodyInner {
+    body: Arc<Mutex<BodyBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct BodyBase {
+    pub(crate) owner: Option<Player>,
+    pub(crate) x: f64,
+    pub(crate) y: f64,
+    pub(crate) radius: f64,
+    pub(crate) body_type: Str,
+    pub(crate) material_type: Str,
+    pub(crate) amount: i64,
 }
 
 impl Body {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<BodyInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Body = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The Player that owns and can control this Body.
     pub fn owner(&self) -> Option<Player> {
-        unimplemented!()
+        self.inner().body.lock().unwrap().owner.clone()
     }
 
     /// The x value this celestial body is on.
     pub fn x(&self) -> f64 {
-        unimplemented!()
+        self.inner().body.lock().unwrap().x.clone()
     }
 
     /// The y value this celestial body is on.
     pub fn y(&self) -> f64 {
-        unimplemented!()
+        self.inner().body.lock().unwrap().y.clone()
     }
 
     /// The radius of the circle that this body takes up.
     pub fn radius(&self) -> f64 {
-        unimplemented!()
+        self.inner().body.lock().unwrap().radius.clone()
     }
 
     /// The type of celestial body it is. Either 'planet', 'asteroid', or 'sun'.
     pub fn body_type(&self) -> Str {
-        unimplemented!()
+        self.inner().body.lock().unwrap().body_type.clone()
     }
 
     /// The type of material the celestial body has. Either 'none', 'genarium', 'rarium',
     /// 'legendarium', or 'mythicite'.
     pub fn material_type(&self) -> Str {
-        unimplemented!()
+        self.inner().body.lock().unwrap().material_type.clone()
     }
 
     /// The amount of material the object has, or energy if it is a planet.
     pub fn amount(&self) -> i64 {
-        unimplemented!()
+        self.inner().body.lock().unwrap().amount.clone()
     }
 
     /// _Inherited from GameObject_
@@ -51,7 +91,7 @@ impl Body {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -60,14 +100,14 @@ impl Body {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Spawn a unit on some value of this celestial body.
@@ -146,22 +186,11 @@ impl Body {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

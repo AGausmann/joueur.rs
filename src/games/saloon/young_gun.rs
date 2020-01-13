@@ -1,34 +1,71 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// An eager young person that wants to join your gang, and will call in the veteran Cowboys you
 /// need to win the brawl in the saloon.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct YoungGun {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<YoungGunInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct YoungGunInner {
+    young_gun: Arc<Mutex<YoungGunBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct YoungGunBase {
+    pub(crate) owner: Player,
+    pub(crate) tile: Tile,
+    pub(crate) can_call_in: bool,
+    pub(crate) call_in_tile: Tile,
 }
 
 impl YoungGun {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<YoungGunInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: YoungGun = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The Player that owns and can control this YoungGun.
     pub fn owner(&self) -> Player {
-        unimplemented!()
+        self.inner().young_gun.lock().unwrap().owner.clone()
     }
 
     /// The Tile this YoungGun is currently on.
     pub fn tile(&self) -> Tile {
-        unimplemented!()
+        self.inner().young_gun.lock().unwrap().tile.clone()
     }
 
     /// True if the YoungGun can call in a Cowboy, false otherwise.
     pub fn can_call_in(&self) -> bool {
-        unimplemented!()
+        self.inner().young_gun.lock().unwrap().can_call_in.clone()
     }
 
     /// The Tile that a Cowboy will be called in on if this YoungGun calls in a Cowboy.
     pub fn call_in_tile(&self) -> Tile {
-        unimplemented!()
+        self.inner().young_gun.lock().unwrap().call_in_tile.clone()
     }
 
     /// _Inherited from GameObject_
@@ -36,7 +73,7 @@ impl YoungGun {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -45,14 +82,14 @@ impl YoungGun {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// Tells the YoungGun to call in a new Cowboy of the given job to the open Tile nearest to
@@ -91,22 +128,11 @@ impl YoungGun {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

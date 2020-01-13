@@ -1,54 +1,95 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// Information about a unit's job/type.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct UnitJob {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<UnitJobInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct UnitJobInner {
+    unit_job: Arc<Mutex<UnitJobBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct UnitJobBase {
+    pub(crate) title: Str,
+    pub(crate) per_tile: i64,
+    pub(crate) health: i64,
+    pub(crate) moves: i64,
+    pub(crate) damage: i64,
+    pub(crate) gold_cost: i64,
+    pub(crate) mana_cost: i64,
+    pub(crate) range: i64,
 }
 
 impl UnitJob {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<UnitJobInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: UnitJob = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The type title. 'worker', 'zombie', 'ghoul', 'hound', 'abomination', 'wraith' or
     /// 'horseman'.
     pub fn title(&self) -> Str {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().title.clone()
     }
 
     /// How many of this type of unit can take up one tile.
     pub fn per_tile(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().per_tile.clone()
     }
 
     /// The amount of starting health this type has.
     pub fn health(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().health.clone()
     }
 
     /// The number of moves this type can make per turn.
     pub fn moves(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().moves.clone()
     }
 
     /// The amount of damage this type does per attack.
     pub fn damage(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().damage.clone()
     }
 
     /// How much does this type cost in gold.
     pub fn gold_cost(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().gold_cost.clone()
     }
 
     /// How much does this type cost in mana.
     pub fn mana_cost(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().mana_cost.clone()
     }
 
     /// Amount of tiles away this type has to be in order to be effective.
     pub fn range(&self) -> i64 {
-        unimplemented!()
+        self.inner().unit_job.lock().unwrap().range.clone()
     }
 
     /// _Inherited from GameObject_
@@ -56,7 +97,7 @@ impl UnitJob {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -65,14 +106,14 @@ impl UnitJob {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// _Inherited from GameObject_
@@ -91,22 +132,11 @@ impl UnitJob {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }

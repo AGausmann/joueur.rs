@@ -19,3 +19,16 @@ pub use tower::Tower;
 pub use tower_job::TowerJob;
 pub use unit::Unit;
 pub use unit_job::UnitJob;
+
+#[derive(Debug)]
+struct Context {}
+
+impl Context {
+    fn try_get_obj<T>(&self, id: &str) -> Option<T> {
+        unimplemented!()
+    }
+
+    fn get_obj<T>(&self, id: &str) -> T {
+        self.try_get_obj(id).expect("Object is not of given type")
+    }
+}

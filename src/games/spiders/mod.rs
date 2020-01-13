@@ -26,3 +26,16 @@ pub use spiderling::Spiderling;
 pub use spitter::Spitter;
 pub use weaver::Weaver;
 pub use web::Web;
+
+#[derive(Debug)]
+struct Context {}
+
+impl Context {
+    fn try_get_obj<T>(&self, id: &str) -> Option<T> {
+        unimplemented!()
+    }
+
+    fn get_obj<T>(&self, id: &str) -> T {
+        self.try_get_obj(id).expect("Object is not of given type")
+    }
+}

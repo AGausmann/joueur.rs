@@ -1,40 +1,78 @@
 #![allow(dead_code, unused_imports)]
 
+use std::sync::{Arc, Mutex, Weak};
+use std::cell::{RefCell, RefMut};
+
 use super::*;
 use crate::types::*;
 
 /// A structure on a Tile.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Structure {
+    context: Weak<Context>,
+    id: Str,
+    inner: RefCell<Option<StructureInner>>,
+}
+
+#[derive(Debug, Clone)]
+struct StructureInner {
+    structure: Arc<Mutex<StructureBase>>,
+    game_object: Arc<Mutex<game_object::GameObjectBase>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct StructureBase {
+    pub(crate) type_: Str,
+    pub(crate) tile: Option<Tile>,
+    pub(crate) owner: Option<Player>,
+    pub(crate) materials: i64,
+    pub(crate) effect_radius: i64,
 }
 
 impl Structure {
+    fn context(&self) -> Arc<Context> {
+        self.context.upgrade().expect("context dropped before end of game")
+    }
+
+    fn inner(&self) -> RefMut<StructureInner> {
+        let inner = self.inner.borrow_mut();
+        RefMut::map(inner, |cache| {
+            if let Some(resolved) = cache {
+                resolved
+            } else {
+                let obj: Structure = self.context().get_obj(&self.id);
+                *cache = obj.inner.borrow().clone();
+                cache.as_mut().unwrap()
+            }
+        })
+    }
+
 
     /// The type of Structure this is ('shelter', 'monument', 'wall', 'road', 'neutral').
-    pub fn type_of(&self) -> Str {
-        unimplemented!()
+    pub fn type_(&self) -> Str {
+        self.inner().structure.lock().unwrap().type_.clone()
     }
 
     /// The Tile this Structure is on.
     pub fn tile(&self) -> Option<Tile> {
-        unimplemented!()
+        self.inner().structure.lock().unwrap().tile.clone()
     }
 
     /// The owner of this Structure if any, otherwise None.
     pub fn owner(&self) -> Option<Player> {
-        unimplemented!()
+        self.inner().structure.lock().unwrap().owner.clone()
     }
 
     /// The number of materials in this Structure. Once this number reaches 0, this Structure is
     /// destroyed.
     pub fn materials(&self) -> i64 {
-        unimplemented!()
+        self.inner().structure.lock().unwrap().materials.clone()
     }
 
     /// The range of this Structure's effect. For example, a radius of 1 means this Structure
     /// affects a 3x3 square centered on this Structure.
     pub fn effect_radius(&self) -> i64 {
-        unimplemented!()
+        self.inner().structure.lock().unwrap().effect_radius.clone()
     }
 
     /// _Inherited from GameObject_
@@ -42,7 +80,7 @@ impl Structure {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().id.clone()
     }
 
     /// _Inherited from GameObject_
@@ -51,14 +89,14 @@ impl Structure {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
     /// _Inherited from GameObject_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner().game_object.lock().unwrap().logs.clone()
     }
 
     /// _Inherited from GameObject_
@@ -77,22 +115,11 @@ impl Structure {
         unimplemented!()
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Errors
-    ///
-    /// This method will return `None` if this object cannot be casted into the target class. This
-    /// happens when the base class of this object does not inherit from the target class.
     pub fn try_cast<T>(&self) -> Option<T> {
-        unimplemented!()
+        self.context().try_get_obj(&self.id)
     }
 
-    /// Attempts to cast this object into an object of another class.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the base class of this object does not inherit from the target class.
-    pub fn cast<T>(&self) -> T {
-        self.try_cast().unwrap()
+    pub fn cast<T>(&self) -> Option<T> {
+        self.context().get_obj(&self.id)
     }
 }
