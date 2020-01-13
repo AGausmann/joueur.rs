@@ -91,6 +91,7 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
         self.context().run(&self.id, "${func_name}", args)
     }
 % endfor
+% if obj_key != 'Game':
 
     pub fn try_cast<T>(&self) -> Option<T> {
         self.context().try_get_obj(&self.id)
@@ -99,4 +100,5 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
     pub fn cast<T>(&self) -> Option<T> {
         self.context().get_obj(&self.id)
     }
+% endif
 }

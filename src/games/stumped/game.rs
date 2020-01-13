@@ -153,12 +153,4 @@ impl Game {
     pub fn spawner_harvest_constant(&self) -> f64 {
         self.inner().game.lock().unwrap().spawner_harvest_constant.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

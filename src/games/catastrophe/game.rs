@@ -203,12 +203,4 @@ impl Game {
     pub fn starting_food(&self) -> i64 {
         self.inner().game.lock().unwrap().starting_food.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

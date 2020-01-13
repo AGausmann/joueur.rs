@@ -142,12 +142,4 @@ impl Game {
     pub fn max_forecast_intensity(&self) -> i64 {
         self.inner().game.lock().unwrap().max_forecast_intensity.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

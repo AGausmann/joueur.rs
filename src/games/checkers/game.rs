@@ -117,12 +117,4 @@ impl Game {
     pub fn checker_moved_jumped(&self) -> bool {
         self.inner().game.lock().unwrap().checker_moved_jumped.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

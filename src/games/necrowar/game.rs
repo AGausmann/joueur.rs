@@ -153,12 +153,4 @@ impl Game {
     pub fn mana_income_per_unit(&self) -> i64 {
         self.inner().game.lock().unwrap().mana_income_per_unit.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

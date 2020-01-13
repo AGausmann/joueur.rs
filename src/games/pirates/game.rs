@@ -214,12 +214,4 @@ impl Game {
     pub fn merchant_gold_rate(&self) -> f64 {
         self.inner().game.lock().unwrap().merchant_gold_rate.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }

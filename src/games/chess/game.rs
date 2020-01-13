@@ -75,12 +75,4 @@ impl Game {
     pub fn fen(&self) -> Str {
         self.inner().game.lock().unwrap().fen.clone()
     }
-
-    pub fn try_cast<T>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T>(&self) -> Option<T> {
-        self.context().get_obj(&self.id)
-    }
 }
