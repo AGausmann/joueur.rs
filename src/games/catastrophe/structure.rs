@@ -1,8 +1,9 @@
 #![allow(dead_code, unused_imports)]
 
-use std::sync::{Arc, Mutex, Weak};
+use std::any::TypeId;
 use std::cell::{RefCell, RefMut};
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, Weak};
 
 use super::*;
 use crate::types::*;
@@ -126,11 +127,31 @@ impl Structure {
         self.context().run(&self.id, "log", args)
     }
 
-    pub fn try_cast<T>(&self) -> Option<T> {
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
         self.context().try_get_obj(&self.id)
     }
 
-    pub fn cast<T>(&self) -> T {
+    pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
+
+    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
+        match TypeId::of::<T>() {
+            x if x == TypeId::of::<Structure>() => Some(T::shallow(self.context.clone(), self.id.clone())),
+            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
+            _ => None,
+        }
+    }
 }
+
+impl ObjectInner for Structure {
+    fn shallow(context: Weak<Context>, id: Str) -> Structure {
+        Structure {
+            context,
+            id,
+            inner: RefCell::new(None),
+        }
+    }
+}
+
+impl Object for Structure {}

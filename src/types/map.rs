@@ -1,5 +1,6 @@
 //! Associated types for `Map`.
 
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::iter::FromIterator;
@@ -9,6 +10,16 @@ use std::sync::Arc;
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Map<K: Hash + Eq, V> {
     inner: Arc<HashMap<K, V>>,
+}
+
+impl<K: Hash + Eq, V> Map<K, V> {
+    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.inner.get(key)
+    }
 }
 
 impl<K: Hash + Eq, V> From<HashMap<K, V>> for Map<K, V> {

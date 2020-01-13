@@ -1,8 +1,9 @@
 #![allow(dead_code, unused_imports)]
 
-use std::sync::{Arc, Mutex, Weak};
+use std::any::TypeId;
 use std::cell::{RefCell, RefMut};
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, Weak};
 
 use super::*;
 use crate::types::*;
@@ -57,9 +58,7 @@ impl Game {
             if let Some(resolved) = cache {
                 resolved
             } else {
-                let obj: Game = self.context().get_obj(&self.id);
-                *cache = obj.inner.borrow().clone();
-                cache.as_mut().unwrap()
+                panic!("game is unresolved?");
             }
         })
     }

@@ -1,9 +1,10 @@
 <%include file="functions.noCreer" />\
 #![allow(dead_code, unused_imports)]
 
-use std::sync::{Arc, Mutex, Weak};
+use std::any::TypeId;
 use std::cell::{RefCell, RefMut};
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, Weak};
 
 use super::*;
 use crate::types::*;
@@ -47,9 +48,13 @@ impl ${obj_key} {
             if let Some(resolved) = cache {
                 resolved
             } else {
+% if obj_key == 'Game':
+                panic!("game is unresolved?");
+% else:
                 let obj: ${obj_key} = self.context().get_obj(&self.id);
                 *cache = obj.inner.borrow().clone();
                 cache.as_mut().unwrap()
+% endif
             }
         })
     }
@@ -93,12 +98,36 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
 % endfor
 % if obj_key != 'Game':
 
-    pub fn try_cast<T>(&self) -> Option<T> {
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
         self.context().try_get_obj(&self.id)
     }
 
-    pub fn cast<T>(&self) -> T {
+    pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
+    }
+
+    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
+        match TypeId::of::<T>() {
+            x if x == TypeId::of::<${obj_key}>() => Some(T::shallow(self.context.clone(), self.id.clone())),
+% for parent in shared['rs']['all_parents'](obj):
+            x if x == TypeId::of::<${parent}>() => Some(T::shallow(self.context.clone(), self.id.clone())),
+% endfor
+            _ => None,
+        }
     }
 % endif
 }
+% if obj_key != 'Game':
+
+impl ObjectInner for ${obj_key} {
+    fn shallow(context: Weak<Context>, id: Str) -> ${obj_key} {
+        ${obj_key} {
+            context,
+            id,
+            inner: RefCell::new(None),
+        }
+    }
+}
+
+impl Object for ${obj_key} {}
+% endif
