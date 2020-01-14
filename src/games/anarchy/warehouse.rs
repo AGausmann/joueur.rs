@@ -62,7 +62,7 @@ impl Warehouse {
         self.inner().warehouse.lock().unwrap().exposure.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// How much health this building currently has. When this reaches 0 the Building has been
     /// burned down.
@@ -70,7 +70,7 @@ impl Warehouse {
         self.inner().building.lock().unwrap().health.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The player that owns this building. If it burns down (health reaches 0) that player gets an
     /// additional bribe(s).
@@ -78,7 +78,7 @@ impl Warehouse {
         self.inner().building.lock().unwrap().owner.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// True if this is the Headquarters of the owning player, false otherwise. Burning this down
     /// wins the game for the other Player.
@@ -86,7 +86,7 @@ impl Warehouse {
         self.inner().building.lock().unwrap().is_headquarters.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// When true this building has already been bribed this turn and cannot be bribed again this
     /// turn.
@@ -94,21 +94,21 @@ impl Warehouse {
         self.inner().building.lock().unwrap().bribed.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The location of the Building along the x-axis.
     pub fn x(&self) -> i64 {
         self.inner().building.lock().unwrap().x.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The location of the Building along the y-axis.
     pub fn y(&self) -> i64 {
         self.inner().building.lock().unwrap().y.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// How much fire is currently burning the building, and thus how much damage it will take at
     /// the end of its owner's turn. 0 means no fire.
@@ -116,35 +116,35 @@ impl Warehouse {
         self.inner().building.lock().unwrap().fire.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The Building directly to the north of this building, or None if not present.
     pub fn building_north(&self) -> Option<Building> {
         self.inner().building.lock().unwrap().building_north.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The Building directly to the east of this building, or None if not present.
     pub fn building_east(&self) -> Option<Building> {
         self.inner().building.lock().unwrap().building_east.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The Building directly to the south of this building, or None if not present.
     pub fn building_south(&self) -> Option<Building> {
         self.inner().building.lock().unwrap().building_south.clone()
     }
 
-    /// _Inherited from Building_
+    /// _Inherited from [`Building`]_
     ///
     /// The Building directly to the west of this building, or None if not present.
     pub fn building_west(&self) -> Option<Building> {
         self.inner().building.lock().unwrap().building_west.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
@@ -152,7 +152,7 @@ impl Warehouse {
         self.inner().game_object.lock().unwrap().id.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
@@ -161,7 +161,7 @@ impl Warehouse {
         self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
@@ -196,7 +196,7 @@ impl Warehouse {
         self.context().run(&self.id, "ignite", args)
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// Adds a message to this GameObject's logs. Intended for your own debugging purposes, as
     /// strings stored here are saved in the gamelog.

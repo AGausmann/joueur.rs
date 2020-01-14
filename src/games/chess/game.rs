@@ -64,7 +64,7 @@ impl Game {
         self.inner().game.lock().unwrap().session.clone()
     }
 
-    /// The list of [known] moves that have occurred in the game, in Standard Algebraic Notation
+    /// The list of \[known\] moves that have occurred in the game, in Standard Algebraic Notation
     /// (SAN) format. The first element is the first move, with the last being the most recent.
     pub fn history(&self) -> List<Str> {
         self.inner().game.lock().unwrap().history.clone()

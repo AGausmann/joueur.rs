@@ -60,28 +60,28 @@ impl BroodMother {
         self.inner().brood_mother.lock().unwrap().eggs.clone()
     }
 
-    /// _Inherited from Spider_
+    /// _Inherited from [`Spider`]_
     ///
     /// The Player that owns this Spider, and can command it.
     pub fn owner(&self) -> Player {
         self.inner().spider.lock().unwrap().owner.clone()
     }
 
-    /// _Inherited from Spider_
+    /// _Inherited from [`Spider`]_
     ///
     /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
         self.inner().spider.lock().unwrap().nest.clone()
     }
 
-    /// _Inherited from Spider_
+    /// _Inherited from [`Spider`]_
     ///
     /// If this Spider is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
         self.inner().spider.lock().unwrap().is_dead.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
@@ -89,7 +89,7 @@ impl BroodMother {
         self.inner().game_object.lock().unwrap().id.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// String representing the top level Class that this game object is an instance of. Used for
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
@@ -98,7 +98,7 @@ impl BroodMother {
         self.inner().game_object.lock().unwrap().game_object_name.clone()
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
@@ -159,7 +159,7 @@ impl BroodMother {
         self.context().run(&self.id, "spawn", args)
     }
 
-    /// _Inherited from GameObject_
+    /// _Inherited from [`GameObject`]_
     ///
     /// Adds a message to this GameObject's logs. Intended for your own debugging purposes, as
     /// strings stored here are saved in the gamelog.

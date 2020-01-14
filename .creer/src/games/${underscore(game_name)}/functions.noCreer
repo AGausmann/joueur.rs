@@ -157,42 +157,46 @@ if not 'rs' in shared:
 
     import re
     re_null = re.compile('null', re.IGNORECASE)
+    re_lbrc = re.compile('\\[')
+    re_rbrc = re.compile('\\]')
 
     def rustify(text):
         text = re_null.sub('None', text)
+        text = re_lbrc.sub('\\[', text)
+        text = re_rbrc.sub('\\]', text)
         return text
 
     def obj_doc(obj, prefix):
         return prefix_lines(rustify(obj['description']), prefix)
 
     def attr_doc(attr, parent, prefix):
-        text = attr['description']
+        text = rustify(attr['description'])
 
         if parent:
-            text = '_Inherited from {}_\n\n'.format(parent) + text
+            text = '_Inherited from [`{}`]_\n\n'.format(parent) + text
 
-        return prefix_lines(rustify(text), prefix)
+        return prefix_lines(text, prefix)
 
     def func_doc(func, parent, prefix):
-        text = func['description']
+        text = rustify(func['description'])
 
         if func['arguments']:
             text += '\n\n# Arguments'
             for arg in func['arguments']:
                 text += '\n\n- _{}_ - {}'.format(
                     sanitize(underscore(arg['name'])),
-                    arg['description'],
+                    rustify(arg['description']),
                 )
 
         if func['returns']:
             text += '\n\n# Returns\n\n{}'.format(
-                func['returns']['description'],
+                rustify(func['returns']['description']),
             )
 
         if parent:
-            text = '_Inherited from {}_\n\n'.format(parent) + text
+            text = '_Inherited from [`{}`]_\n\n'.format(parent) + text
 
-        return prefix_lines(rustify(text), prefix)
+        return prefix_lines(text, prefix)
 
     def all_attributes(obj):
         for name, attr in obj['attributes'].items():
