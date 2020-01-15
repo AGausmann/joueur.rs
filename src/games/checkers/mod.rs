@@ -14,7 +14,7 @@ pub use game_object::GameObject;
 pub use player::Player;
 
 use std::any::{Any, TypeId};
-use std::sync::Weak;
+use std::sync::{Arc, Mutex, Weak};
 
 use crate::error::Error;
 use crate::types::*;
@@ -31,13 +31,13 @@ impl Context {
             .and_then(|obj| match obj.type_id() {
                 x if x == TypeId::of::<Checker>() => obj
                     .downcast_ref::<Checker>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<GameObject>() => obj
                     .downcast_ref::<GameObject>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Player>() => obj
                     .downcast_ref::<Player>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 _ => panic!("unknown game object type"),
             })
     }
@@ -56,9 +56,21 @@ pub trait Object: ObjectInner  {}
 mod inner {
     use super::*;
 
-    pub trait ObjectInner: Any {
-        fn shallow(context: Weak<Context>, id: Str) -> Self;
+    pub trait ObjectInner: Any + Sized {
+        fn to_bases(&self) -> Bases;
+
+        fn from_bases(bases: Bases) -> Option<Self>;
     }
 }
 
 use inner::ObjectInner;
+
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct Bases {
+    context: Option<Weak<Context>>,
+    id: Option<Str>,
+    checker: Option<Arc<Mutex<checker::CheckerBase>>>,
+    game_object: Option<Arc<Mutex<game_object::GameObjectBase>>>,
+    player: Option<Arc<Mutex<player::PlayerBase>>>,
+}

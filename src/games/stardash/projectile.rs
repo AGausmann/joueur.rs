@@ -138,23 +138,31 @@ impl Projectile {
     pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
-
-    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
-        match TypeId::of::<T>() {
-            x if x == TypeId::of::<Projectile>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl ObjectInner for Projectile {
-    fn shallow(context: Weak<Context>, id: Str) -> Projectile {
-        Projectile {
-            context,
-            id,
-            inner: RefCell::new(None),
+    fn to_bases(&self) -> Bases {
+        let inner = self.inner();
+        Bases {
+            context: Some(self.context.clone()),
+            id: Some(self.id.clone()),
+            projectile: Some(Arc::clone(&inner.projectile)),
+            game_object: Some(Arc::clone(&inner.game_object)),
+            ..Default::default()
         }
+    }
+
+    fn from_bases(bases: Bases) -> Option<Self> {
+        let inner = ProjectileInner {
+            projectile: bases.projectile?,
+            game_object: bases.game_object?,
+        };
+
+        Some(Projectile {
+            context: bases.context?,
+            id: bases.id?,
+            inner: RefCell::new(Some(inner)),
+        })
     }
 }
 

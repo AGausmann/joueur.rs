@@ -28,7 +28,7 @@ pub use weaver::Weaver;
 pub use web::Web;
 
 use std::any::{Any, TypeId};
-use std::sync::Weak;
+use std::sync::{Arc, Mutex, Weak};
 
 use crate::error::Error;
 use crate::types::*;
@@ -45,34 +45,34 @@ impl Context {
             .and_then(|obj| match obj.type_id() {
                 x if x == TypeId::of::<BroodMother>() => obj
                     .downcast_ref::<BroodMother>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Cutter>() => obj
                     .downcast_ref::<Cutter>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<GameObject>() => obj
                     .downcast_ref::<GameObject>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Nest>() => obj
                     .downcast_ref::<Nest>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Player>() => obj
                     .downcast_ref::<Player>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Spider>() => obj
                     .downcast_ref::<Spider>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Spiderling>() => obj
                     .downcast_ref::<Spiderling>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Spitter>() => obj
                     .downcast_ref::<Spitter>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Weaver>() => obj
                     .downcast_ref::<Weaver>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 x if x == TypeId::of::<Web>() => obj
                     .downcast_ref::<Web>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
                 _ => panic!("unknown game object type"),
             })
     }
@@ -91,9 +91,28 @@ pub trait Object: ObjectInner  {}
 mod inner {
     use super::*;
 
-    pub trait ObjectInner: Any {
-        fn shallow(context: Weak<Context>, id: Str) -> Self;
+    pub trait ObjectInner: Any + Sized {
+        fn to_bases(&self) -> Bases;
+
+        fn from_bases(bases: Bases) -> Option<Self>;
     }
 }
 
 use inner::ObjectInner;
+
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct Bases {
+    context: Option<Weak<Context>>,
+    id: Option<Str>,
+    brood_mother: Option<Arc<Mutex<brood_mother::BroodMotherBase>>>,
+    cutter: Option<Arc<Mutex<cutter::CutterBase>>>,
+    game_object: Option<Arc<Mutex<game_object::GameObjectBase>>>,
+    nest: Option<Arc<Mutex<nest::NestBase>>>,
+    player: Option<Arc<Mutex<player::PlayerBase>>>,
+    spider: Option<Arc<Mutex<spider::SpiderBase>>>,
+    spiderling: Option<Arc<Mutex<spiderling::SpiderlingBase>>>,
+    spitter: Option<Arc<Mutex<spitter::SpitterBase>>>,
+    weaver: Option<Arc<Mutex<weaver::WeaverBase>>>,
+    web: Option<Arc<Mutex<web::WebBase>>>,
+}

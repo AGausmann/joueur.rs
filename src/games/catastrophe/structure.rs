@@ -134,23 +134,31 @@ impl Structure {
     pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
-
-    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
-        match TypeId::of::<T>() {
-            x if x == TypeId::of::<Structure>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl ObjectInner for Structure {
-    fn shallow(context: Weak<Context>, id: Str) -> Structure {
-        Structure {
-            context,
-            id,
-            inner: RefCell::new(None),
+    fn to_bases(&self) -> Bases {
+        let inner = self.inner();
+        Bases {
+            context: Some(self.context.clone()),
+            id: Some(self.id.clone()),
+            structure: Some(Arc::clone(&inner.structure)),
+            game_object: Some(Arc::clone(&inner.game_object)),
+            ..Default::default()
         }
+    }
+
+    fn from_bases(bases: Bases) -> Option<Self> {
+        let inner = StructureInner {
+            structure: bases.structure?,
+            game_object: bases.game_object?,
+        };
+
+        Some(Structure {
+            context: bases.context?,
+            id: bases.id?,
+            inner: RefCell::new(Some(inner)),
+        })
     }
 }
 

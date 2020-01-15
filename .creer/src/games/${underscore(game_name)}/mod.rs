@@ -10,7 +10,7 @@ pub use ${underscore(obj_key)}::${obj_key};
 % endfor
 
 use std::any::{Any, TypeId};
-use std::sync::Weak;
+use std::sync::{Arc, Mutex, Weak};
 
 use crate::error::Error;
 use crate::types::*;
@@ -28,7 +28,7 @@ impl Context {
 % for obj_key in sorted(list(game_objs.keys())):
                 x if x == TypeId::of::<${obj_key}>() => obj
                     .downcast_ref::<${obj_key}>()
-                    .and_then(|base| base.try_upcast()),
+                    .and_then(|base| T::from_bases(base.to_bases())),
 % endfor
                 _ => panic!("unknown game object type"),
             })
@@ -48,9 +48,21 @@ pub trait Object: ObjectInner  {}
 mod inner {
     use super::*;
 
-    pub trait ObjectInner: Any {
-        fn shallow(context: Weak<Context>, id: Str) -> Self;
+    pub trait ObjectInner: Any + Sized {
+        fn to_bases(&self) -> Bases;
+
+        fn from_bases(bases: Bases) -> Option<Self>;
     }
 }
 
 use inner::ObjectInner;
+
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct Bases {
+    context: Option<Weak<Context>>,
+    id: Option<Str>,
+% for obj_key in sorted(list(game_objs.keys())):
+    ${underscore(obj_key)}: Option<Arc<Mutex<${underscore(obj_key)}::${obj_key}Base>>>,
+% endfor
+}

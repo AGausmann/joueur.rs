@@ -132,23 +132,31 @@ impl Furnishing {
     pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
-
-    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
-        match TypeId::of::<T>() {
-            x if x == TypeId::of::<Furnishing>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl ObjectInner for Furnishing {
-    fn shallow(context: Weak<Context>, id: Str) -> Furnishing {
-        Furnishing {
-            context,
-            id,
-            inner: RefCell::new(None),
+    fn to_bases(&self) -> Bases {
+        let inner = self.inner();
+        Bases {
+            context: Some(self.context.clone()),
+            id: Some(self.id.clone()),
+            furnishing: Some(Arc::clone(&inner.furnishing)),
+            game_object: Some(Arc::clone(&inner.game_object)),
+            ..Default::default()
         }
+    }
+
+    fn from_bases(bases: Bases) -> Option<Self> {
+        let inner = FurnishingInner {
+            furnishing: bases.furnishing?,
+            game_object: bases.game_object?,
+        };
+
+        Some(Furnishing {
+            context: bases.context?,
+            id: bases.id?,
+            inner: RefCell::new(Some(inner)),
+        })
     }
 }
 

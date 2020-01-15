@@ -286,25 +286,35 @@ impl Weaver {
     pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
-
-    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
-        match TypeId::of::<T>() {
-            x if x == TypeId::of::<Weaver>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<Spiderling>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<Spider>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl ObjectInner for Weaver {
-    fn shallow(context: Weak<Context>, id: Str) -> Weaver {
-        Weaver {
-            context,
-            id,
-            inner: RefCell::new(None),
+    fn to_bases(&self) -> Bases {
+        let inner = self.inner();
+        Bases {
+            context: Some(self.context.clone()),
+            id: Some(self.id.clone()),
+            weaver: Some(Arc::clone(&inner.weaver)),
+            spiderling: Some(Arc::clone(&inner.spiderling)),
+            spider: Some(Arc::clone(&inner.spider)),
+            game_object: Some(Arc::clone(&inner.game_object)),
+            ..Default::default()
         }
+    }
+
+    fn from_bases(bases: Bases) -> Option<Self> {
+        let inner = WeaverInner {
+            weaver: bases.weaver?,
+            spiderling: bases.spiderling?,
+            spider: bases.spider?,
+            game_object: bases.game_object?,
+        };
+
+        Some(Weaver {
+            context: bases.context?,
+            id: bases.id?,
+            inner: RefCell::new(Some(inner)),
+        })
     }
 }
 

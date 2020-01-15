@@ -233,23 +233,31 @@ impl Body {
     pub fn cast<T: Object>(&self) -> T {
         self.context().get_obj(&self.id)
     }
-
-    pub(crate) fn try_upcast<T: Object>(&self) -> Option<T> {
-        match TypeId::of::<T>() {
-            x if x == TypeId::of::<Body>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            x if x == TypeId::of::<GameObject>() => Some(T::shallow(self.context.clone(), self.id.clone())),
-            _ => None,
-        }
-    }
 }
 
 impl ObjectInner for Body {
-    fn shallow(context: Weak<Context>, id: Str) -> Body {
-        Body {
-            context,
-            id,
-            inner: RefCell::new(None),
+    fn to_bases(&self) -> Bases {
+        let inner = self.inner();
+        Bases {
+            context: Some(self.context.clone()),
+            id: Some(self.id.clone()),
+            body: Some(Arc::clone(&inner.body)),
+            game_object: Some(Arc::clone(&inner.game_object)),
+            ..Default::default()
         }
+    }
+
+    fn from_bases(bases: Bases) -> Option<Self> {
+        let inner = BodyInner {
+            body: bases.body?,
+            game_object: bases.game_object?,
+        };
+
+        Some(Body {
+            context: bases.context?,
+            id: bases.id?,
+            inner: RefCell::new(Some(inner)),
+        })
     }
 }
 
