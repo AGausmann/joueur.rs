@@ -12,10 +12,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Spitter {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Spitter {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Spitter {
+        Spitter { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -28,7 +32,8 @@ impl Spitter {
     /// The Nest that this Spitter is creating a Web to spit at, thus connecting them. None if not
     /// spitting.
     pub fn spitting_web_to_nest(&self) -> Option<Nest> {
-        self.inner.lock().unwrap().as_spitter()
+        self.inner.lock().unwrap()
+            .as_spitter()
             .spitting_web_to_nest.clone()
     }
 
@@ -37,7 +42,8 @@ impl Spitter {
     /// When empty string this Spiderling is not busy, and can act. Otherwise a string representing
     /// what it is busy with, e.g. 'Moving', 'Attacking'.
     pub fn busy(&self) -> Str {
-        self.inner.lock().unwrap().as_spiderling()
+        self.inner.lock().unwrap()
+            .as_spiderling()
             .busy.clone()
     }
 
@@ -46,7 +52,8 @@ impl Spitter {
     /// How much work needs to be done for this Spiderling to finish being busy. See docs for the
     /// Work forumla.
     pub fn work_remaining(&self) -> f64 {
-        self.inner.lock().unwrap().as_spiderling()
+        self.inner.lock().unwrap()
+            .as_spiderling()
             .work_remaining.clone()
     }
 
@@ -55,7 +62,8 @@ impl Spitter {
     /// The number of Spiderlings busy with the same work this Spiderling is doing, speeding up the
     /// task.
     pub fn number_of_coworkers(&self) -> i64 {
-        self.inner.lock().unwrap().as_spiderling()
+        self.inner.lock().unwrap()
+            .as_spiderling()
             .number_of_coworkers.clone()
     }
 
@@ -63,7 +71,8 @@ impl Spitter {
     ///
     /// The Web this Spiderling is using to move. None if it is not moving.
     pub fn moving_on_web(&self) -> Option<Web> {
-        self.inner.lock().unwrap().as_spiderling()
+        self.inner.lock().unwrap()
+            .as_spiderling()
             .moving_on_web.clone()
     }
 
@@ -71,7 +80,8 @@ impl Spitter {
     ///
     /// The Nest this Spiderling is moving to. None if it is not moving.
     pub fn moving_to_nest(&self) -> Option<Nest> {
-        self.inner.lock().unwrap().as_spiderling()
+        self.inner.lock().unwrap()
+            .as_spiderling()
             .moving_to_nest.clone()
     }
 
@@ -79,7 +89,8 @@ impl Spitter {
     ///
     /// The Player that owns this Spider, and can command it.
     pub fn owner(&self) -> Player {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .owner.clone()
     }
 
@@ -87,7 +98,8 @@ impl Spitter {
     ///
     /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .nest.clone()
     }
 
@@ -95,7 +107,8 @@ impl Spitter {
     ///
     /// If this Spider is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .is_dead.clone()
     }
 
@@ -104,7 +117,8 @@ impl Spitter {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -114,7 +128,8 @@ impl Spitter {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -122,7 +137,8 @@ impl Spitter {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -245,7 +261,7 @@ impl Spitter {
 }
 
 impl inner::ObjectInner for Spitter {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_spitter().is_some() {
             Some(Spitter {

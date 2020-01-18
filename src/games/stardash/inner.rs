@@ -8,11 +8,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -21,11 +26,11 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Body(BodyInner),
@@ -34,7 +39,7 @@ pub enum GameObject {
     Job(JobInner),
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -45,12 +50,12 @@ impl GameObject {
 
     pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
-            GameObject::GameObject(obj) => Some(&obj.game_object),
-            GameObject::Player(obj) => Some(&obj.game_object),
-            GameObject::Body(obj) => Some(&obj.game_object),
-            GameObject::Projectile(obj) => Some(&obj.game_object),
-            GameObject::Unit(obj) => Some(&obj.game_object),
-            GameObject::Job(obj) => Some(&obj.game_object),
+            AnyGameObject::GameObject(obj) => Some(&obj.game_object),
+            AnyGameObject::Player(obj) => Some(&obj.game_object),
+            AnyGameObject::Body(obj) => Some(&obj.game_object),
+            AnyGameObject::Projectile(obj) => Some(&obj.game_object),
+            AnyGameObject::Unit(obj) => Some(&obj.game_object),
+            AnyGameObject::Job(obj) => Some(&obj.game_object),
         }
     }
 
@@ -60,12 +65,12 @@ impl GameObject {
 
     pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(obj) => Some(&obj.player),
-            GameObject::Body(_obj) => None,
-            GameObject::Projectile(_obj) => None,
-            GameObject::Unit(_obj) => None,
-            GameObject::Job(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(obj) => Some(&obj.player),
+            AnyGameObject::Body(_obj) => None,
+            AnyGameObject::Projectile(_obj) => None,
+            AnyGameObject::Unit(_obj) => None,
+            AnyGameObject::Job(_obj) => None,
         }
     }
 
@@ -75,12 +80,12 @@ impl GameObject {
 
     pub fn try_as_body(&self) -> Option< &BodyBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Body(obj) => Some(&obj.body),
-            GameObject::Projectile(_obj) => None,
-            GameObject::Unit(_obj) => None,
-            GameObject::Job(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Body(obj) => Some(&obj.body),
+            AnyGameObject::Projectile(_obj) => None,
+            AnyGameObject::Unit(_obj) => None,
+            AnyGameObject::Job(_obj) => None,
         }
     }
 
@@ -90,12 +95,12 @@ impl GameObject {
 
     pub fn try_as_projectile(&self) -> Option< &ProjectileBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Body(_obj) => None,
-            GameObject::Projectile(obj) => Some(&obj.projectile),
-            GameObject::Unit(_obj) => None,
-            GameObject::Job(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Body(_obj) => None,
+            AnyGameObject::Projectile(obj) => Some(&obj.projectile),
+            AnyGameObject::Unit(_obj) => None,
+            AnyGameObject::Job(_obj) => None,
         }
     }
 
@@ -105,12 +110,12 @@ impl GameObject {
 
     pub fn try_as_unit(&self) -> Option< &UnitBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Body(_obj) => None,
-            GameObject::Projectile(_obj) => None,
-            GameObject::Unit(obj) => Some(&obj.unit),
-            GameObject::Job(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Body(_obj) => None,
+            AnyGameObject::Projectile(_obj) => None,
+            AnyGameObject::Unit(obj) => Some(&obj.unit),
+            AnyGameObject::Job(_obj) => None,
         }
     }
 
@@ -120,12 +125,12 @@ impl GameObject {
 
     pub fn try_as_job(&self) -> Option< &JobBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Body(_obj) => None,
-            GameObject::Projectile(_obj) => None,
-            GameObject::Unit(_obj) => None,
-            GameObject::Job(obj) => Some(&obj.job),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Body(_obj) => None,
+            AnyGameObject::Projectile(_obj) => None,
+            AnyGameObject::Unit(_obj) => None,
+            AnyGameObject::Job(obj) => Some(&obj.job),
         }
     }
 

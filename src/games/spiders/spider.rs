@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Spider {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Spider {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Spider {
+        Spider { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,19 +30,22 @@ impl Spider {
 
     /// The Player that owns this Spider, and can command it.
     pub fn owner(&self) -> Player {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .owner.clone()
     }
 
     /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .nest.clone()
     }
 
     /// If this Spider is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
-        self.inner.lock().unwrap().as_spider()
+        self.inner.lock().unwrap()
+            .as_spider()
             .is_dead.clone()
     }
 
@@ -47,7 +54,8 @@ impl Spider {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -57,7 +65,8 @@ impl Spider {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -65,7 +74,8 @@ impl Spider {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -104,7 +114,7 @@ impl Spider {
 }
 
 impl inner::ObjectInner for Spider {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_spider().is_some() {
             Some(Spider {

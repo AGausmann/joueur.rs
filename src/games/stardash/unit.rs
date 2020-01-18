@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Unit {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Unit {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Unit {
+        Unit { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,100 +30,116 @@ impl Unit {
 
     /// The Player that owns and can control this Unit.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .owner.clone()
     }
 
     /// The x value this unit is on.
     pub fn x(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .x.clone()
     }
 
     /// The y value this unit is on.
     pub fn y(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .y.clone()
     }
 
     /// The x value this unit is dashing to.
     pub fn dash_x(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .dash_x.clone()
     }
 
     /// The y value this unit is dashing to.
     pub fn dash_y(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .dash_y.clone()
     }
 
     /// The Job this Unit has.
     pub fn job(&self) -> Job {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .job.clone()
     }
 
     /// The remaining health of the unit.
     pub fn energy(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .energy.clone()
     }
 
     /// The sheild that a martyr ship has.
     pub fn shield(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .shield.clone()
     }
 
     /// Whether or not this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .acted.clone()
     }
 
     /// The distance this unit can still move.
     pub fn moves(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .moves.clone()
     }
 
     /// The amount of Genarium ore carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn genarium(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .genarium.clone()
     }
 
     /// The amount of Rarium carried by this unit. (0 to job carry capacity - other carried items).
     pub fn rarium(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .rarium.clone()
     }
 
     /// The amount of Legendarium ore carried by this unit. (0 to job carry capacity - other
     /// carried items).
     pub fn legendarium(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .legendarium.clone()
     }
 
     /// The amount of Mythicite carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn mythicite(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .mythicite.clone()
     }
 
     /// Tracks wheither or not the ship is dashing or Mining. If true, it cannot do anything else.
     pub fn is_busy(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .is_busy.clone()
     }
 
     /// The martyr ship that is currently shielding this ship if any.
     pub fn protector(&self) -> Option<Unit> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .protector.clone()
     }
 
@@ -128,7 +148,8 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -138,7 +159,8 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -146,7 +168,8 @@ impl Unit {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -394,7 +417,7 @@ impl Unit {
 }
 
 impl inner::ObjectInner for Unit {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_unit().is_some() {
             Some(Unit {

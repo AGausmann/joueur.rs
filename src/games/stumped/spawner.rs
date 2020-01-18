@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Spawner {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Spawner {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Spawner {
+        Spawner { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,27 +30,31 @@ impl Spawner {
 
     /// What type of resource this is ('food' or 'branches').
     pub fn type_(&self) -> Str {
-        self.inner.lock().unwrap().as_spawner()
+        self.inner.lock().unwrap()
+            .as_spawner()
             .type_.clone()
     }
 
     /// How much health this Spawner has, which is used to calculate how much of its resource can
     /// be harvested.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_spawner()
+        self.inner.lock().unwrap()
+            .as_spawner()
             .health.clone()
     }
 
     /// The Tile this Spawner is on.
     pub fn tile(&self) -> Tile {
-        self.inner.lock().unwrap().as_spawner()
+        self.inner.lock().unwrap()
+            .as_spawner()
             .tile.clone()
     }
 
     /// True if this Spawner has been harvested this turn, and it will not heal at the end of the
     /// turn, false otherwise.
     pub fn has_been_harvested(&self) -> bool {
-        self.inner.lock().unwrap().as_spawner()
+        self.inner.lock().unwrap()
+            .as_spawner()
             .has_been_harvested.clone()
     }
 
@@ -55,7 +63,8 @@ impl Spawner {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -65,7 +74,8 @@ impl Spawner {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -73,7 +83,8 @@ impl Spawner {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -112,7 +123,7 @@ impl Spawner {
 }
 
 impl inner::ObjectInner for Spawner {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_spawner().is_some() {
             Some(Spawner {

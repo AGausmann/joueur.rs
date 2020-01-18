@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Checker {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Checker {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Checker {
+        Checker { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,25 +30,29 @@ impl Checker {
 
     /// The player that controls this Checker.
     pub fn owner(&self) -> Player {
-        self.inner.lock().unwrap().as_checker()
+        self.inner.lock().unwrap()
+            .as_checker()
             .owner.clone()
     }
 
     /// The x coordinate of the checker.
     pub fn x(&self) -> i64 {
-        self.inner.lock().unwrap().as_checker()
+        self.inner.lock().unwrap()
+            .as_checker()
             .x.clone()
     }
 
     /// The y coordinate of the checker.
     pub fn y(&self) -> i64 {
-        self.inner.lock().unwrap().as_checker()
+        self.inner.lock().unwrap()
+            .as_checker()
             .y.clone()
     }
 
     /// If the checker has been kinged and can move backwards.
     pub fn kinged(&self) -> bool {
-        self.inner.lock().unwrap().as_checker()
+        self.inner.lock().unwrap()
+            .as_checker()
             .kinged.clone()
     }
 
@@ -53,7 +61,8 @@ impl Checker {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -63,7 +72,8 @@ impl Checker {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -71,7 +81,8 @@ impl Checker {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -160,7 +171,7 @@ impl Checker {
 }
 
 impl inner::ObjectInner for Checker {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_checker().is_some() {
             Some(Checker {

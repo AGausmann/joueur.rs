@@ -9,11 +9,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -22,17 +27,17 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
 % for obj in game_objs.keys():
     ${obj}(${obj}Inner),
 % endfor
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -46,9 +51,9 @@ impl GameObject {
         match self {
 % for sub_key, sub_obj in game_objs.items():
 % if sub_key == obj_key or obj_key in shared['rs']['all_parents'](sub_obj):
-            GameObject::${sub_key}(obj) => Some(&obj.${underscore(obj_key)}),
+            AnyGameObject::${sub_key}(obj) => Some(&obj.${underscore(obj_key)}),
 % else:
-            GameObject::${sub_key}(_obj) => None,
+            AnyGameObject::${sub_key}(_obj) => None,
 % endif
 % endfor
         }

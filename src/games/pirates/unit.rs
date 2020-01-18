@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Unit {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Unit {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Unit {
+        Unit { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,69 +30,80 @@ impl Unit {
 
     /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .owner.clone()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .tile.clone()
     }
 
     /// If a ship is on this Tile, how much health it has remaining. 0 for no ship.
     pub fn ship_health(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .ship_health.clone()
     }
 
     /// How many crew are on this Tile. This number will always be <= crewHealth.
     pub fn crew(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .crew.clone()
     }
 
     /// How much total health the crew on this Tile have.
     pub fn crew_health(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .crew_health.clone()
     }
 
     /// How much gold this Unit is carrying.
     pub fn gold(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .gold.clone()
     }
 
     /// Whether this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .acted.clone()
     }
 
     /// How many more times this Unit may move this turn.
     pub fn moves(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .moves.clone()
     }
 
     /// (Merchants only) The path this Unit will follow. The first element is the Tile this Unit
     /// will move to next.
     pub fn path(&self) -> List<Tile> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .path.clone()
     }
 
     /// (Merchants only) The Port this Unit is moving to.
     pub fn target_port(&self) -> Option<Port> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .target_port.clone()
     }
 
     /// (Merchants only) The number of turns this merchant ship won't be able to move. They will
     /// still attack. Merchant ships are stunned when they're attacked.
     pub fn stun_turns(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .stun_turns.clone()
     }
 
@@ -97,7 +112,8 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -107,7 +123,8 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -115,7 +132,8 @@ impl Unit {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -381,7 +399,7 @@ impl Unit {
 }
 
 impl inner::ObjectInner for Unit {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_unit().is_some() {
             Some(Unit {

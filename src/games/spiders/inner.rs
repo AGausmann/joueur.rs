@@ -8,11 +8,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -21,11 +26,11 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Nest(NestInner),
@@ -38,7 +43,7 @@ pub enum GameObject {
     Cutter(CutterInner),
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -49,16 +54,16 @@ impl GameObject {
 
     pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
-            GameObject::GameObject(obj) => Some(&obj.game_object),
-            GameObject::Player(obj) => Some(&obj.game_object),
-            GameObject::Nest(obj) => Some(&obj.game_object),
-            GameObject::Web(obj) => Some(&obj.game_object),
-            GameObject::Spider(obj) => Some(&obj.game_object),
-            GameObject::BroodMother(obj) => Some(&obj.game_object),
-            GameObject::Spiderling(obj) => Some(&obj.game_object),
-            GameObject::Spitter(obj) => Some(&obj.game_object),
-            GameObject::Weaver(obj) => Some(&obj.game_object),
-            GameObject::Cutter(obj) => Some(&obj.game_object),
+            AnyGameObject::GameObject(obj) => Some(&obj.game_object),
+            AnyGameObject::Player(obj) => Some(&obj.game_object),
+            AnyGameObject::Nest(obj) => Some(&obj.game_object),
+            AnyGameObject::Web(obj) => Some(&obj.game_object),
+            AnyGameObject::Spider(obj) => Some(&obj.game_object),
+            AnyGameObject::BroodMother(obj) => Some(&obj.game_object),
+            AnyGameObject::Spiderling(obj) => Some(&obj.game_object),
+            AnyGameObject::Spitter(obj) => Some(&obj.game_object),
+            AnyGameObject::Weaver(obj) => Some(&obj.game_object),
+            AnyGameObject::Cutter(obj) => Some(&obj.game_object),
         }
     }
 
@@ -68,16 +73,16 @@ impl GameObject {
 
     pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(obj) => Some(&obj.player),
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(obj) => Some(&obj.player),
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -87,16 +92,16 @@ impl GameObject {
 
     pub fn try_as_nest(&self) -> Option< &NestBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(obj) => Some(&obj.nest),
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(obj) => Some(&obj.nest),
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -106,16 +111,16 @@ impl GameObject {
 
     pub fn try_as_web(&self) -> Option< &WebBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(obj) => Some(&obj.web),
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(obj) => Some(&obj.web),
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -125,16 +130,16 @@ impl GameObject {
 
     pub fn try_as_spider(&self) -> Option< &SpiderBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(obj) => Some(&obj.spider),
-            GameObject::BroodMother(obj) => Some(&obj.spider),
-            GameObject::Spiderling(obj) => Some(&obj.spider),
-            GameObject::Spitter(obj) => Some(&obj.spider),
-            GameObject::Weaver(obj) => Some(&obj.spider),
-            GameObject::Cutter(obj) => Some(&obj.spider),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(obj) => Some(&obj.spider),
+            AnyGameObject::BroodMother(obj) => Some(&obj.spider),
+            AnyGameObject::Spiderling(obj) => Some(&obj.spider),
+            AnyGameObject::Spitter(obj) => Some(&obj.spider),
+            AnyGameObject::Weaver(obj) => Some(&obj.spider),
+            AnyGameObject::Cutter(obj) => Some(&obj.spider),
         }
     }
 
@@ -144,16 +149,16 @@ impl GameObject {
 
     pub fn try_as_brood_mother(&self) -> Option< &BroodMotherBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(obj) => Some(&obj.brood_mother),
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(obj) => Some(&obj.brood_mother),
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -163,16 +168,16 @@ impl GameObject {
 
     pub fn try_as_spiderling(&self) -> Option< &SpiderlingBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(obj) => Some(&obj.spiderling),
-            GameObject::Spitter(obj) => Some(&obj.spiderling),
-            GameObject::Weaver(obj) => Some(&obj.spiderling),
-            GameObject::Cutter(obj) => Some(&obj.spiderling),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(obj) => Some(&obj.spiderling),
+            AnyGameObject::Spitter(obj) => Some(&obj.spiderling),
+            AnyGameObject::Weaver(obj) => Some(&obj.spiderling),
+            AnyGameObject::Cutter(obj) => Some(&obj.spiderling),
         }
     }
 
@@ -182,16 +187,16 @@ impl GameObject {
 
     pub fn try_as_spitter(&self) -> Option< &SpitterBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(obj) => Some(&obj.spitter),
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(obj) => Some(&obj.spitter),
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -201,16 +206,16 @@ impl GameObject {
 
     pub fn try_as_weaver(&self) -> Option< &WeaverBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(obj) => Some(&obj.weaver),
-            GameObject::Cutter(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(obj) => Some(&obj.weaver),
+            AnyGameObject::Cutter(_obj) => None,
         }
     }
 
@@ -220,16 +225,16 @@ impl GameObject {
 
     pub fn try_as_cutter(&self) -> Option< &CutterBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Nest(_obj) => None,
-            GameObject::Web(_obj) => None,
-            GameObject::Spider(_obj) => None,
-            GameObject::BroodMother(_obj) => None,
-            GameObject::Spiderling(_obj) => None,
-            GameObject::Spitter(_obj) => None,
-            GameObject::Weaver(_obj) => None,
-            GameObject::Cutter(obj) => Some(&obj.cutter),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Nest(_obj) => None,
+            AnyGameObject::Web(_obj) => None,
+            AnyGameObject::Spider(_obj) => None,
+            AnyGameObject::BroodMother(_obj) => None,
+            AnyGameObject::Spiderling(_obj) => None,
+            AnyGameObject::Spitter(_obj) => None,
+            AnyGameObject::Weaver(_obj) => None,
+            AnyGameObject::Cutter(obj) => Some(&obj.cutter),
         }
     }
 

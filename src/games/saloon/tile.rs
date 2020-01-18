@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Tile {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Tile {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Tile {
+        Tile { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,74 +30,86 @@ impl Tile {
 
     /// The x (horizontal) position of this Tile.
     pub fn x(&self) -> i64 {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .x.clone()
     }
 
     /// The y (vertical) position of this Tile.
     pub fn y(&self) -> i64 {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .y.clone()
     }
 
     /// The Tile to the 'North' of this one (x, y-1). None if out of bounds of the map.
     pub fn tile_north(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .tile_north.clone()
     }
 
     /// The Tile to the 'East' of this one (x+1, y). None if out of bounds of the map.
     pub fn tile_east(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .tile_east.clone()
     }
 
     /// The Tile to the 'South' of this one (x, y+1). None if out of bounds of the map.
     pub fn tile_south(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .tile_south.clone()
     }
 
     /// The Tile to the 'West' of this one (x-1, y). None if out of bounds of the map.
     pub fn tile_west(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .tile_west.clone()
     }
 
     /// The Cowboy that is on this Tile, None otherwise.
     pub fn cowboy(&self) -> Option<Cowboy> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .cowboy.clone()
     }
 
     /// The furnishing that is on this Tile, None otherwise.
     pub fn furnishing(&self) -> Option<Furnishing> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .furnishing.clone()
     }
 
     /// If this Tile is a balcony of the Saloon that YoungGuns walk around on, and can never be
     /// pathed through by Cowboys.
     pub fn is_balcony(&self) -> bool {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .is_balcony.clone()
     }
 
     /// If this Tile is pathable, but has a hazard that damages Cowboys that path through it.
     pub fn has_hazard(&self) -> bool {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .has_hazard.clone()
     }
 
     /// The beer Bottle currently flying over this Tile, None otherwise.
     pub fn bottle(&self) -> Option<Bottle> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .bottle.clone()
     }
 
     /// The YoungGun on this tile, None otherwise.
     pub fn young_gun(&self) -> Option<YoungGun> {
-        self.inner.lock().unwrap().as_tile()
+        self.inner.lock().unwrap()
+            .as_tile()
             .young_gun.clone()
     }
 
@@ -102,7 +118,8 @@ impl Tile {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -112,7 +129,8 @@ impl Tile {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -120,7 +138,8 @@ impl Tile {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -159,7 +178,7 @@ impl Tile {
 }
 
 impl inner::ObjectInner for Tile {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_tile().is_some() {
             Some(Tile {

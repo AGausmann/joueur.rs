@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Forecast {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Forecast {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Forecast {
+        Forecast { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,20 +30,23 @@ impl Forecast {
 
     /// The direction the wind will blow fires in. Can be 'north', 'east', 'south', or 'west'.
     pub fn direction(&self) -> Str {
-        self.inner.lock().unwrap().as_forecast()
+        self.inner.lock().unwrap()
+            .as_forecast()
             .direction.clone()
     }
 
     /// How much of a Building's fire that can be blown in the direction of this Forecast. Fire is
     /// duplicated (copied), not moved (transfered).
     pub fn intensity(&self) -> i64 {
-        self.inner.lock().unwrap().as_forecast()
+        self.inner.lock().unwrap()
+            .as_forecast()
             .intensity.clone()
     }
 
     /// The Player that can use WeatherStations to control this Forecast when its the nextForecast.
     pub fn controlling_player(&self) -> Player {
-        self.inner.lock().unwrap().as_forecast()
+        self.inner.lock().unwrap()
+            .as_forecast()
             .controlling_player.clone()
     }
 
@@ -48,7 +55,8 @@ impl Forecast {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -58,7 +66,8 @@ impl Forecast {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -66,7 +75,8 @@ impl Forecast {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -105,7 +115,7 @@ impl Forecast {
 }
 
 impl inner::ObjectInner for Forecast {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_forecast().is_some() {
             Some(Forecast {

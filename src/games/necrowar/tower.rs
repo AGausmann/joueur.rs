@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Tower {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Tower {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Tower {
+        Tower { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,37 +30,43 @@ impl Tower {
 
     /// The player that built / owns this tower.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .owner.clone()
     }
 
     /// The Tile this Tower is on.
     pub fn tile(&self) -> Tile {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .tile.clone()
     }
 
     /// What type of tower this is (it's job).
     pub fn job(&self) -> TowerJob {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .job.clone()
     }
 
     /// How much remaining health this tower has.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .health.clone()
     }
 
     /// Whether this tower has attacked this turn or not.
     pub fn attacked(&self) -> bool {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .attacked.clone()
     }
 
     /// How many turns are left before it can fire again.
     pub fn cooldown(&self) -> i64 {
-        self.inner.lock().unwrap().as_tower()
+        self.inner.lock().unwrap()
+            .as_tower()
             .cooldown.clone()
     }
 
@@ -65,7 +75,8 @@ impl Tower {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -75,7 +86,8 @@ impl Tower {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -83,7 +95,8 @@ impl Tower {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -148,7 +161,7 @@ impl Tower {
 }
 
 impl inner::ObjectInner for Tower {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_tower().is_some() {
             Some(Tower {

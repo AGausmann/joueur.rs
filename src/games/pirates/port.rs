@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Port {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Port {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Port {
+        Port { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,27 +30,31 @@ impl Port {
 
     /// The Tile this Port is on.
     pub fn tile(&self) -> Tile {
-        self.inner.lock().unwrap().as_port()
+        self.inner.lock().unwrap()
+            .as_port()
             .tile.clone()
     }
 
     /// The owner of this Port, or None if owned by merchants.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_port()
+        self.inner.lock().unwrap()
+            .as_port()
             .owner.clone()
     }
 
     /// For players, how much more gold this Port can spend this turn. For merchants, how much gold
     /// this Port has accumulated (it will spawn a ship when the Port can afford one).
     pub fn gold(&self) -> i64 {
-        self.inner.lock().unwrap().as_port()
+        self.inner.lock().unwrap()
+            .as_port()
             .gold.clone()
     }
 
     /// (Merchants only) How much gold was invested into this Port. Investment determines the
     /// strength and value of the next ship.
     pub fn investment(&self) -> i64 {
-        self.inner.lock().unwrap().as_port()
+        self.inner.lock().unwrap()
+            .as_port()
             .investment.clone()
     }
 
@@ -55,7 +63,8 @@ impl Port {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -65,7 +74,8 @@ impl Port {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -73,7 +83,8 @@ impl Port {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -138,7 +149,7 @@ impl Port {
 }
 
 impl inner::ObjectInner for Port {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_port().is_some() {
             Some(Port {

@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Unit {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Unit {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Unit {
+        Unit { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,76 +30,88 @@ impl Unit {
 
     /// The Player that owns and can control this Unit.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .owner.clone()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .tile.clone()
     }
 
     /// The Job this Unit has.
     pub fn job(&self) -> Job {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .job.clone()
     }
 
     /// The remaining health of a unit.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .health.clone()
     }
 
     /// Whether or not this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .acted.clone()
     }
 
     /// The number of moves this unit has left this turn.
     pub fn moves(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .moves.clone()
     }
 
     /// The amount of redium ore carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn redium_ore(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .redium_ore.clone()
     }
 
     /// The amount of redium carried by this unit. (0 to job carry capacity - other carried items).
     pub fn redium(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .redium.clone()
     }
 
     /// The amount of blueium ore carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn blueium_ore(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .blueium_ore.clone()
     }
 
     /// The amount of blueium carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn blueium(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .blueium.clone()
     }
 
     /// Duration the unit is stunned. (0 to the game constant stunTime).
     pub fn stun_time(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .stun_time.clone()
     }
 
     /// Duration of stun immunity. (0 to timeImmune).
     pub fn stun_immune(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .stun_immune.clone()
     }
 
@@ -104,7 +120,8 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -114,7 +131,8 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -122,7 +140,8 @@ impl Unit {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -315,7 +334,7 @@ impl Unit {
 }
 
 impl inner::ObjectInner for Unit {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_unit().is_some() {
             Some(Unit {

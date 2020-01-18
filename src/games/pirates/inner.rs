@@ -8,11 +8,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -21,11 +26,11 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Tile(TileInner),
@@ -33,7 +38,7 @@ pub enum GameObject {
     Unit(UnitInner),
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -44,11 +49,11 @@ impl GameObject {
 
     pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
-            GameObject::GameObject(obj) => Some(&obj.game_object),
-            GameObject::Player(obj) => Some(&obj.game_object),
-            GameObject::Tile(obj) => Some(&obj.game_object),
-            GameObject::Port(obj) => Some(&obj.game_object),
-            GameObject::Unit(obj) => Some(&obj.game_object),
+            AnyGameObject::GameObject(obj) => Some(&obj.game_object),
+            AnyGameObject::Player(obj) => Some(&obj.game_object),
+            AnyGameObject::Tile(obj) => Some(&obj.game_object),
+            AnyGameObject::Port(obj) => Some(&obj.game_object),
+            AnyGameObject::Unit(obj) => Some(&obj.game_object),
         }
     }
 
@@ -58,11 +63,11 @@ impl GameObject {
 
     pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(obj) => Some(&obj.player),
-            GameObject::Tile(_obj) => None,
-            GameObject::Port(_obj) => None,
-            GameObject::Unit(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(obj) => Some(&obj.player),
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Port(_obj) => None,
+            AnyGameObject::Unit(_obj) => None,
         }
     }
 
@@ -72,11 +77,11 @@ impl GameObject {
 
     pub fn try_as_tile(&self) -> Option< &TileBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(obj) => Some(&obj.tile),
-            GameObject::Port(_obj) => None,
-            GameObject::Unit(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(obj) => Some(&obj.tile),
+            AnyGameObject::Port(_obj) => None,
+            AnyGameObject::Unit(_obj) => None,
         }
     }
 
@@ -86,11 +91,11 @@ impl GameObject {
 
     pub fn try_as_port(&self) -> Option< &PortBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Port(obj) => Some(&obj.port),
-            GameObject::Unit(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Port(obj) => Some(&obj.port),
+            AnyGameObject::Unit(_obj) => None,
         }
     }
 
@@ -100,11 +105,11 @@ impl GameObject {
 
     pub fn try_as_unit(&self) -> Option< &UnitBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Port(_obj) => None,
-            GameObject::Unit(obj) => Some(&obj.unit),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Port(_obj) => None,
+            AnyGameObject::Unit(obj) => Some(&obj.unit),
         }
     }
 

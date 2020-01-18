@@ -16,10 +16,22 @@ ${shared['rs']['obj_doc'](obj, '/// ')}
 #[derive(Debug, Clone)]
 pub struct ${obj_key} {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+% if obj_key == 'Game':
+    inner: Arc<Mutex<inner::GameBase>>,
+% else:
+    inner: Arc<Mutex<inner::AnyGameObject>>,
+% endif
 }
 
 impl ${obj_key} {
+% if obj_key == 'Game':
+    pub(crate) fn new(inner: Arc<Mutex<inner::GameBase>>, context: Weak<Mutex<inner::Context>>) -> ${obj_key} {
+% else:
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> ${obj_key} {
+% endif
+        ${obj_key} { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -32,12 +44,11 @@ impl ${obj_key} {
 
 ${shared['rs']['attr_doc'](attr, parent, '    /// ')}
     pub fn ${shared['rs']['sanitize'](underscore(attr_name))}(&self) -> ${shared['rs']['return_type'](attr['type'])} {
-% if obj_key == 'Game':
-        unimplemented!()
-% else:
-        self.inner.lock().unwrap().as_${underscore(parent or obj_key)}()
-            .${shared['rs']['sanitize'](underscore(attr_name))}.clone()
+        self.inner.lock().unwrap()
+% if obj_key != 'Game':
+            .as_${underscore(parent or obj_key)}()
 % endif
+            .${shared['rs']['sanitize'](underscore(attr_name))}.clone()
     }
 % endfor
 % for func_name, func, parent in shared['rs']['all_functions'](obj):
@@ -70,6 +81,7 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
         self.with_context(|cx| cx.run(&self.id(), "${func_name}", args))
     }
 % endfor
+% if obj_key != 'Game':
 
     pub fn try_cast<T: Object>(&self) -> Option<T> {
         T::from_game_object(&self.inner, &self.context)
@@ -78,11 +90,12 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
     pub fn cast<T: Object>(&self) -> T {
         self.try_cast().unwrap()
     }
+% endif
 }
 % if obj_key != 'Game':
 
 impl inner::ObjectInner for ${obj_key} {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_${underscore(obj_key)}().is_some() {
             Some(${obj_key} {

@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Cowboy {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Cowboy {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Cowboy {
+        Cowboy { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,70 +30,81 @@ impl Cowboy {
 
     /// How much health this Cowboy currently has.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .health.clone()
     }
 
     /// The Player that owns and can control this Cowboy.
     pub fn owner(&self) -> Player {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .owner.clone()
     }
 
     /// If this Cowboy is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .is_dead.clone()
     }
 
     /// The job that this Cowboy does, and dictates how they fight and interact within the Saloon.
     pub fn job(&self) -> Str {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .job.clone()
     }
 
     /// If the Cowboy can be moved this turn via its owner.
     pub fn can_move(&self) -> bool {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .can_move.clone()
     }
 
     /// The Tile that this Cowboy is located on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .tile.clone()
     }
 
     /// How much focus this Cowboy has. Different Jobs do different things with their Cowboy's
     /// focus.
     pub fn focus(&self) -> i64 {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .focus.clone()
     }
 
     /// If this Cowboy is drunk, and will automatically walk.
     pub fn is_drunk(&self) -> bool {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .is_drunk.clone()
     }
 
     /// The direction this Cowboy is moving while drunk. Will be 'North', 'East', 'South', or
     /// 'West' when drunk; or '' (empty string) when not drunk.
     pub fn drunk_direction(&self) -> Str {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .drunk_direction.clone()
     }
 
     /// How many times this unit has been drunk before taking their siesta and reseting this to 0.
     pub fn tolerance(&self) -> i64 {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .tolerance.clone()
     }
 
     /// How many turns this unit has remaining before it is no longer busy and can `act()` or
     /// `play()` again.
     pub fn turns_busy(&self) -> i64 {
-        self.inner.lock().unwrap().as_cowboy()
+        self.inner.lock().unwrap()
+            .as_cowboy()
             .turns_busy.clone()
     }
 
@@ -98,7 +113,8 @@ impl Cowboy {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -108,7 +124,8 @@ impl Cowboy {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -116,7 +133,8 @@ impl Cowboy {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -239,7 +257,7 @@ impl Cowboy {
 }
 
 impl inner::ObjectInner for Cowboy {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_cowboy().is_some() {
             Some(Cowboy {

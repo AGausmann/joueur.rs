@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct UnitJob {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl UnitJob {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> UnitJob {
+        UnitJob { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -27,49 +31,57 @@ impl UnitJob {
     /// The type title. 'worker', 'zombie', 'ghoul', 'hound', 'abomination', 'wraith' or
     /// 'horseman'.
     pub fn title(&self) -> Str {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .title.clone()
     }
 
     /// How many of this type of unit can take up one tile.
     pub fn per_tile(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .per_tile.clone()
     }
 
     /// The amount of starting health this type has.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .health.clone()
     }
 
     /// The number of moves this type can make per turn.
     pub fn moves(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .moves.clone()
     }
 
     /// The amount of damage this type does per attack.
     pub fn damage(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .damage.clone()
     }
 
     /// How much does this type cost in gold.
     pub fn gold_cost(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .gold_cost.clone()
     }
 
     /// How much does this type cost in mana.
     pub fn mana_cost(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .mana_cost.clone()
     }
 
     /// Amount of tiles away this type has to be in order to be effective.
     pub fn range(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit_job()
+        self.inner.lock().unwrap()
+            .as_unit_job()
             .range.clone()
     }
 
@@ -78,7 +90,8 @@ impl UnitJob {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -88,7 +101,8 @@ impl UnitJob {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -96,7 +110,8 @@ impl UnitJob {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -135,7 +150,7 @@ impl UnitJob {
 }
 
 impl inner::ObjectInner for UnitJob {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_unit_job().is_some() {
             Some(UnitJob {

@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Unit {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Unit {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Unit {
+        Unit { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,77 +30,89 @@ impl Unit {
 
     /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .owner.clone()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .tile.clone()
     }
 
     /// The Job this Unit was recruited to do.
     pub fn job(&self) -> Job {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .job.clone()
     }
 
     /// How many moves this Unit has left this turn.
     pub fn moves(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .moves.clone()
     }
 
     /// The amount of energy this Unit has (from 0.0 to 100.0).
     pub fn energy(&self) -> f64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .energy.clone()
     }
 
     /// The Units in the same squad as this Unit. Units in the same squad attack and defend
     /// together.
     pub fn squad(&self) -> List<Unit> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .squad.clone()
     }
 
     /// Whether this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .acted.clone()
     }
 
     /// The amount of food this Unit is holding.
     pub fn food(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .food.clone()
     }
 
     /// The amount of materials this Unit is holding.
     pub fn materials(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .materials.clone()
     }
 
     /// Whether this Unit is starving. Starving Units regenerate energy at half the rate they
     /// normally would while resting.
     pub fn starving(&self) -> bool {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .starving.clone()
     }
 
     /// The number of turns before this Unit dies. This only applies to neutral fresh humans
     /// created from combat. Otherwise, 0.
     pub fn turns_to_die(&self) -> i64 {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .turns_to_die.clone()
     }
 
     /// The tile this Unit is moving to. This only applies to neutral fresh humans spawned on the
     /// road. Otherwise, the tile this Unit is on.
     pub fn movement_target(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_unit()
+        self.inner.lock().unwrap()
+            .as_unit()
             .movement_target.clone()
     }
 
@@ -105,7 +121,8 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -115,7 +132,8 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -123,7 +141,8 @@ impl Unit {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -449,7 +468,7 @@ impl Unit {
 }
 
 impl inner::ObjectInner for Unit {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_unit().is_some() {
             Some(Unit {

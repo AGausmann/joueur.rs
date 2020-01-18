@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Bottle {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Bottle {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Bottle {
+        Bottle { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,28 +30,32 @@ impl Bottle {
 
     /// The Tile this bottle is currently flying over.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_bottle()
+        self.inner.lock().unwrap()
+            .as_bottle()
             .tile.clone()
     }
 
     /// The Direction this Bottle is flying and will move to between turns, can be 'North', 'East',
     /// 'South', or 'West'.
     pub fn direction(&self) -> Str {
-        self.inner.lock().unwrap().as_bottle()
+        self.inner.lock().unwrap()
+            .as_bottle()
             .direction.clone()
     }
 
     /// True if this Bottle has impacted and has been destroyed (removed from the Game). False if
     /// still in the game flying through the saloon.
     pub fn is_destroyed(&self) -> bool {
-        self.inner.lock().unwrap().as_bottle()
+        self.inner.lock().unwrap()
+            .as_bottle()
             .is_destroyed.clone()
     }
 
     /// The direction any Cowboys hit by this will move, can be 'North', 'East', 'South', or
     /// 'West'.
     pub fn drunk_direction(&self) -> Str {
-        self.inner.lock().unwrap().as_bottle()
+        self.inner.lock().unwrap()
+            .as_bottle()
             .drunk_direction.clone()
     }
 
@@ -56,7 +64,8 @@ impl Bottle {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -66,7 +75,8 @@ impl Bottle {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -74,7 +84,8 @@ impl Bottle {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -113,7 +124,7 @@ impl Bottle {
 }
 
 impl inner::ObjectInner for Bottle {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_bottle().is_some() {
             Some(Bottle {

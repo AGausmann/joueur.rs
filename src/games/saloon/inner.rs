@@ -8,11 +8,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -21,11 +26,11 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Tile(TileInner),
@@ -35,7 +40,7 @@ pub enum GameObject {
     YoungGun(YoungGunInner),
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -46,13 +51,13 @@ impl GameObject {
 
     pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
-            GameObject::GameObject(obj) => Some(&obj.game_object),
-            GameObject::Player(obj) => Some(&obj.game_object),
-            GameObject::Tile(obj) => Some(&obj.game_object),
-            GameObject::Cowboy(obj) => Some(&obj.game_object),
-            GameObject::Furnishing(obj) => Some(&obj.game_object),
-            GameObject::Bottle(obj) => Some(&obj.game_object),
-            GameObject::YoungGun(obj) => Some(&obj.game_object),
+            AnyGameObject::GameObject(obj) => Some(&obj.game_object),
+            AnyGameObject::Player(obj) => Some(&obj.game_object),
+            AnyGameObject::Tile(obj) => Some(&obj.game_object),
+            AnyGameObject::Cowboy(obj) => Some(&obj.game_object),
+            AnyGameObject::Furnishing(obj) => Some(&obj.game_object),
+            AnyGameObject::Bottle(obj) => Some(&obj.game_object),
+            AnyGameObject::YoungGun(obj) => Some(&obj.game_object),
         }
     }
 
@@ -62,13 +67,13 @@ impl GameObject {
 
     pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(obj) => Some(&obj.player),
-            GameObject::Tile(_obj) => None,
-            GameObject::Cowboy(_obj) => None,
-            GameObject::Furnishing(_obj) => None,
-            GameObject::Bottle(_obj) => None,
-            GameObject::YoungGun(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(obj) => Some(&obj.player),
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Cowboy(_obj) => None,
+            AnyGameObject::Furnishing(_obj) => None,
+            AnyGameObject::Bottle(_obj) => None,
+            AnyGameObject::YoungGun(_obj) => None,
         }
     }
 
@@ -78,13 +83,13 @@ impl GameObject {
 
     pub fn try_as_tile(&self) -> Option< &TileBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(obj) => Some(&obj.tile),
-            GameObject::Cowboy(_obj) => None,
-            GameObject::Furnishing(_obj) => None,
-            GameObject::Bottle(_obj) => None,
-            GameObject::YoungGun(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(obj) => Some(&obj.tile),
+            AnyGameObject::Cowboy(_obj) => None,
+            AnyGameObject::Furnishing(_obj) => None,
+            AnyGameObject::Bottle(_obj) => None,
+            AnyGameObject::YoungGun(_obj) => None,
         }
     }
 
@@ -94,13 +99,13 @@ impl GameObject {
 
     pub fn try_as_cowboy(&self) -> Option< &CowboyBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Cowboy(obj) => Some(&obj.cowboy),
-            GameObject::Furnishing(_obj) => None,
-            GameObject::Bottle(_obj) => None,
-            GameObject::YoungGun(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Cowboy(obj) => Some(&obj.cowboy),
+            AnyGameObject::Furnishing(_obj) => None,
+            AnyGameObject::Bottle(_obj) => None,
+            AnyGameObject::YoungGun(_obj) => None,
         }
     }
 
@@ -110,13 +115,13 @@ impl GameObject {
 
     pub fn try_as_furnishing(&self) -> Option< &FurnishingBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Cowboy(_obj) => None,
-            GameObject::Furnishing(obj) => Some(&obj.furnishing),
-            GameObject::Bottle(_obj) => None,
-            GameObject::YoungGun(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Cowboy(_obj) => None,
+            AnyGameObject::Furnishing(obj) => Some(&obj.furnishing),
+            AnyGameObject::Bottle(_obj) => None,
+            AnyGameObject::YoungGun(_obj) => None,
         }
     }
 
@@ -126,13 +131,13 @@ impl GameObject {
 
     pub fn try_as_bottle(&self) -> Option< &BottleBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Cowboy(_obj) => None,
-            GameObject::Furnishing(_obj) => None,
-            GameObject::Bottle(obj) => Some(&obj.bottle),
-            GameObject::YoungGun(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Cowboy(_obj) => None,
+            AnyGameObject::Furnishing(_obj) => None,
+            AnyGameObject::Bottle(obj) => Some(&obj.bottle),
+            AnyGameObject::YoungGun(_obj) => None,
         }
     }
 
@@ -142,13 +147,13 @@ impl GameObject {
 
     pub fn try_as_young_gun(&self) -> Option< &YoungGunBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Tile(_obj) => None,
-            GameObject::Cowboy(_obj) => None,
-            GameObject::Furnishing(_obj) => None,
-            GameObject::Bottle(_obj) => None,
-            GameObject::YoungGun(obj) => Some(&obj.young_gun),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Tile(_obj) => None,
+            AnyGameObject::Cowboy(_obj) => None,
+            AnyGameObject::Furnishing(_obj) => None,
+            AnyGameObject::Bottle(_obj) => None,
+            AnyGameObject::YoungGun(obj) => Some(&obj.young_gun),
         }
     }
 

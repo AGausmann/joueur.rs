@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Machine {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Machine {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Machine {
+        Machine { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,38 +30,44 @@ impl Machine {
 
     /// The Tile this Machine is on.
     pub fn tile(&self) -> Tile {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .tile.clone()
     }
 
     /// Tracks how many times this machine has been worked. (0 to refineTime).
     pub fn worked(&self) -> i64 {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .worked.clone()
     }
 
     /// What type of ore the machine takes it. Also determines the type of material it outputs.
     /// (redium or blueium).
     pub fn ore_type(&self) -> Str {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .ore_type.clone()
     }
 
     /// The number of times this machine needs to be worked to refine ore.
     pub fn refine_time(&self) -> i64 {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .refine_time.clone()
     }
 
     /// The amount of ore that needs to be inputted into the machine for it to be worked.
     pub fn refine_input(&self) -> i64 {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .refine_input.clone()
     }
 
     /// The amount of refined ore that is returned after the machine has been fully worked.
     pub fn refine_output(&self) -> i64 {
-        self.inner.lock().unwrap().as_machine()
+        self.inner.lock().unwrap()
+            .as_machine()
             .refine_output.clone()
     }
 
@@ -66,7 +76,8 @@ impl Machine {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -76,7 +87,8 @@ impl Machine {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -84,7 +96,8 @@ impl Machine {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -123,7 +136,7 @@ impl Machine {
 }
 
 impl inner::ObjectInner for Machine {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_machine().is_some() {
             Some(Machine {

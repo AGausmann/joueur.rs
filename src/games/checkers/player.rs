@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Player {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Player {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Player {
+        Player { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,62 +30,72 @@ impl Player {
 
     /// The name of the player.
     pub fn name(&self) -> Str {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .name.clone()
     }
 
     /// What type of client this is, e.g. 'Python', 'JavaScript', or some other language. For
     /// potential data mining purposes.
     pub fn client_type(&self) -> Str {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .client_type.clone()
     }
 
     /// If the player won the game or not.
     pub fn won(&self) -> bool {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .won.clone()
     }
 
     /// If the player lost the game or not.
     pub fn lost(&self) -> bool {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .lost.clone()
     }
 
     /// The reason why the player won the game.
     pub fn reason_won(&self) -> Str {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .reason_won.clone()
     }
 
     /// The reason why the player lost the game.
     pub fn reason_lost(&self) -> Str {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .reason_lost.clone()
     }
 
     /// The amount of time (in ns) remaining for this AI to send commands.
     pub fn time_remaining(&self) -> f64 {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .time_remaining.clone()
     }
 
     /// This player's opponent in the game.
     pub fn opponent(&self) -> Player {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .opponent.clone()
     }
 
     /// All the checkers currently in the game owned by this player.
     pub fn checkers(&self) -> List<Checker> {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .checkers.clone()
     }
 
     /// The direction your checkers must go along the y-axis until kinged.
     pub fn y_direction(&self) -> i64 {
-        self.inner.lock().unwrap().as_player()
+        self.inner.lock().unwrap()
+            .as_player()
             .y_direction.clone()
     }
 
@@ -90,7 +104,8 @@ impl Player {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -100,7 +115,8 @@ impl Player {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -108,7 +124,8 @@ impl Player {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -147,7 +164,7 @@ impl Player {
 }
 
 impl inner::ObjectInner for Player {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_player().is_some() {
             Some(Player {

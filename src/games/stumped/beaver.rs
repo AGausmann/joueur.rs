@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Beaver {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Beaver {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Beaver {
+        Beaver { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,61 +30,71 @@ impl Beaver {
 
     /// How many moves this Beaver has left this turn.
     pub fn moves(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .moves.clone()
     }
 
     /// The Player that owns and can control this Beaver.
     pub fn owner(&self) -> Player {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .owner.clone()
     }
 
     /// The number of actions remaining for the Beaver this turn.
     pub fn actions(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .actions.clone()
     }
 
     /// The Tile this Beaver is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .tile.clone()
     }
 
     /// How much health this Beaver has left.
     pub fn health(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .health.clone()
     }
 
     /// Number of turns this Beaver is distracted for (0 means not distracted).
     pub fn turns_distracted(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .turns_distracted.clone()
     }
 
     /// The amount of branches this Beaver is holding.
     pub fn branches(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .branches.clone()
     }
 
     /// The amount of food this Beaver is holding.
     pub fn food(&self) -> i64 {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .food.clone()
     }
 
     /// The Job this Beaver was recruited to do.
     pub fn job(&self) -> Job {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .job.clone()
     }
 
     /// True if the Beaver has finished being recruited and can do things, False otherwise.
     pub fn recruited(&self) -> bool {
-        self.inner.lock().unwrap().as_beaver()
+        self.inner.lock().unwrap()
+            .as_beaver()
             .recruited.clone()
     }
 
@@ -89,7 +103,8 @@ impl Beaver {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -99,7 +114,8 @@ impl Beaver {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -107,7 +123,8 @@ impl Beaver {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -319,7 +336,7 @@ impl Beaver {
 }
 
 impl inner::ObjectInner for Beaver {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_beaver().is_some() {
             Some(Beaver {

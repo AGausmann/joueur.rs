@@ -11,10 +11,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Projectile {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Projectile {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Projectile {
+        Projectile { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -26,37 +30,43 @@ impl Projectile {
 
     /// The Player that owns and can control this Projectile.
     pub fn owner(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .owner.clone()
     }
 
     /// The x value this projectile is on.
     pub fn x(&self) -> f64 {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .x.clone()
     }
 
     /// The y value this projectile is on.
     pub fn y(&self) -> f64 {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .y.clone()
     }
 
     /// The unit that is being attacked by this projectile.
     pub fn target(&self) -> Unit {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .target.clone()
     }
 
     /// The amount of remaining distance the projectile can move.
     pub fn fuel(&self) -> i64 {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .fuel.clone()
     }
 
     /// The remaining health of the projectile.
     pub fn energy(&self) -> i64 {
-        self.inner.lock().unwrap().as_projectile()
+        self.inner.lock().unwrap()
+            .as_projectile()
             .energy.clone()
     }
 
@@ -65,7 +75,8 @@ impl Projectile {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -75,7 +86,8 @@ impl Projectile {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -83,7 +95,8 @@ impl Projectile {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -122,7 +135,7 @@ impl Projectile {
 }
 
 impl inner::ObjectInner for Projectile {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_projectile().is_some() {
             Some(Projectile {

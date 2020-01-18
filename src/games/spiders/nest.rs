@@ -12,10 +12,14 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct Nest {
     context: Weak<Mutex<inner::Context>>,
-    inner: Arc<Mutex<inner::GameObject>>,
+    inner: Arc<Mutex<inner::AnyGameObject>>,
 }
 
 impl Nest {
+    pub(crate) fn new(inner: Arc<Mutex<inner::AnyGameObject>>, context: Weak<Mutex<inner::Context>>) -> Nest {
+        Nest { inner, context }
+    }
+
     fn with_context<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut inner::Context) -> R,
@@ -27,31 +31,36 @@ impl Nest {
 
     /// Webs that connect to this Nest.
     pub fn webs(&self) -> List<Web> {
-        self.inner.lock().unwrap().as_nest()
+        self.inner.lock().unwrap()
+            .as_nest()
             .webs.clone()
     }
 
     /// All the Spiders currently located on this Nest.
     pub fn spiders(&self) -> List<Spider> {
-        self.inner.lock().unwrap().as_nest()
+        self.inner.lock().unwrap()
+            .as_nest()
             .spiders.clone()
     }
 
     /// The Player that 'controls' this Nest as they have the most Spiders on this nest.
     pub fn controlling_player(&self) -> Option<Player> {
-        self.inner.lock().unwrap().as_nest()
+        self.inner.lock().unwrap()
+            .as_nest()
             .controlling_player.clone()
     }
 
     /// The X coordinate of the Nest. Used for distance calculations.
     pub fn x(&self) -> i64 {
-        self.inner.lock().unwrap().as_nest()
+        self.inner.lock().unwrap()
+            .as_nest()
             .x.clone()
     }
 
     /// The Y coordinate of the Nest. Used for distance calculations.
     pub fn y(&self) -> i64 {
-        self.inner.lock().unwrap().as_nest()
+        self.inner.lock().unwrap()
+            .as_nest()
             .y.clone()
     }
 
@@ -60,7 +69,8 @@ impl Nest {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .id.clone()
     }
 
@@ -70,7 +80,8 @@ impl Nest {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .game_object_name.clone()
     }
 
@@ -78,7 +89,8 @@ impl Nest {
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner.lock().unwrap().as_game_object()
+        self.inner.lock().unwrap()
+            .as_game_object()
             .logs.clone()
     }
 
@@ -117,7 +129,7 @@ impl Nest {
 }
 
 impl inner::ObjectInner for Nest {
-    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::AnyGameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
         if handle.try_as_nest().is_some() {
             Some(Nest {

@@ -8,11 +8,16 @@ use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    game: GameBase,
+    self_ref: Option<Weak<Mutex<Context>>>,
+    game: Game,
 }
 
 impl Context {
-    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub(crate) fn get_ref(&self) -> Weak<Mutex<Context>> {
+        self.self_ref.clone().unwrap()
+    }
+
+    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
@@ -21,11 +26,11 @@ pub trait Object: ObjectInner {
 }
 
 pub trait ObjectInner: Sized {
-    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+    fn from_game_object(game_obj: &Arc<Mutex<AnyGameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
 }
 
 #[derive(Debug, Clone)]
-pub enum GameObject {
+pub enum AnyGameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Building(BuildingInner),
@@ -36,7 +41,7 @@ pub enum GameObject {
     Forecast(ForecastInner),
 }
 
-impl GameObject {
+impl AnyGameObject {
     pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
@@ -47,14 +52,14 @@ impl GameObject {
 
     pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
-            GameObject::GameObject(obj) => Some(&obj.game_object),
-            GameObject::Player(obj) => Some(&obj.game_object),
-            GameObject::Building(obj) => Some(&obj.game_object),
-            GameObject::Warehouse(obj) => Some(&obj.game_object),
-            GameObject::FireDepartment(obj) => Some(&obj.game_object),
-            GameObject::WeatherStation(obj) => Some(&obj.game_object),
-            GameObject::PoliceDepartment(obj) => Some(&obj.game_object),
-            GameObject::Forecast(obj) => Some(&obj.game_object),
+            AnyGameObject::GameObject(obj) => Some(&obj.game_object),
+            AnyGameObject::Player(obj) => Some(&obj.game_object),
+            AnyGameObject::Building(obj) => Some(&obj.game_object),
+            AnyGameObject::Warehouse(obj) => Some(&obj.game_object),
+            AnyGameObject::FireDepartment(obj) => Some(&obj.game_object),
+            AnyGameObject::WeatherStation(obj) => Some(&obj.game_object),
+            AnyGameObject::PoliceDepartment(obj) => Some(&obj.game_object),
+            AnyGameObject::Forecast(obj) => Some(&obj.game_object),
         }
     }
 
@@ -64,14 +69,14 @@ impl GameObject {
 
     pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(obj) => Some(&obj.player),
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(_obj) => None,
-            GameObject::FireDepartment(_obj) => None,
-            GameObject::WeatherStation(_obj) => None,
-            GameObject::PoliceDepartment(_obj) => None,
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(obj) => Some(&obj.player),
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(_obj) => None,
+            AnyGameObject::FireDepartment(_obj) => None,
+            AnyGameObject::WeatherStation(_obj) => None,
+            AnyGameObject::PoliceDepartment(_obj) => None,
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -81,14 +86,14 @@ impl GameObject {
 
     pub fn try_as_building(&self) -> Option< &BuildingBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(obj) => Some(&obj.building),
-            GameObject::Warehouse(obj) => Some(&obj.building),
-            GameObject::FireDepartment(obj) => Some(&obj.building),
-            GameObject::WeatherStation(obj) => Some(&obj.building),
-            GameObject::PoliceDepartment(obj) => Some(&obj.building),
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(obj) => Some(&obj.building),
+            AnyGameObject::Warehouse(obj) => Some(&obj.building),
+            AnyGameObject::FireDepartment(obj) => Some(&obj.building),
+            AnyGameObject::WeatherStation(obj) => Some(&obj.building),
+            AnyGameObject::PoliceDepartment(obj) => Some(&obj.building),
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -98,14 +103,14 @@ impl GameObject {
 
     pub fn try_as_warehouse(&self) -> Option< &WarehouseBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(obj) => Some(&obj.warehouse),
-            GameObject::FireDepartment(_obj) => None,
-            GameObject::WeatherStation(_obj) => None,
-            GameObject::PoliceDepartment(_obj) => None,
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(obj) => Some(&obj.warehouse),
+            AnyGameObject::FireDepartment(_obj) => None,
+            AnyGameObject::WeatherStation(_obj) => None,
+            AnyGameObject::PoliceDepartment(_obj) => None,
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -115,14 +120,14 @@ impl GameObject {
 
     pub fn try_as_fire_department(&self) -> Option< &FireDepartmentBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(_obj) => None,
-            GameObject::FireDepartment(obj) => Some(&obj.fire_department),
-            GameObject::WeatherStation(_obj) => None,
-            GameObject::PoliceDepartment(_obj) => None,
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(_obj) => None,
+            AnyGameObject::FireDepartment(obj) => Some(&obj.fire_department),
+            AnyGameObject::WeatherStation(_obj) => None,
+            AnyGameObject::PoliceDepartment(_obj) => None,
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -132,14 +137,14 @@ impl GameObject {
 
     pub fn try_as_weather_station(&self) -> Option< &WeatherStationBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(_obj) => None,
-            GameObject::FireDepartment(_obj) => None,
-            GameObject::WeatherStation(obj) => Some(&obj.weather_station),
-            GameObject::PoliceDepartment(_obj) => None,
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(_obj) => None,
+            AnyGameObject::FireDepartment(_obj) => None,
+            AnyGameObject::WeatherStation(obj) => Some(&obj.weather_station),
+            AnyGameObject::PoliceDepartment(_obj) => None,
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -149,14 +154,14 @@ impl GameObject {
 
     pub fn try_as_police_department(&self) -> Option< &PoliceDepartmentBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(_obj) => None,
-            GameObject::FireDepartment(_obj) => None,
-            GameObject::WeatherStation(_obj) => None,
-            GameObject::PoliceDepartment(obj) => Some(&obj.police_department),
-            GameObject::Forecast(_obj) => None,
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(_obj) => None,
+            AnyGameObject::FireDepartment(_obj) => None,
+            AnyGameObject::WeatherStation(_obj) => None,
+            AnyGameObject::PoliceDepartment(obj) => Some(&obj.police_department),
+            AnyGameObject::Forecast(_obj) => None,
         }
     }
 
@@ -166,14 +171,14 @@ impl GameObject {
 
     pub fn try_as_forecast(&self) -> Option< &ForecastBase > {
         match self {
-            GameObject::GameObject(_obj) => None,
-            GameObject::Player(_obj) => None,
-            GameObject::Building(_obj) => None,
-            GameObject::Warehouse(_obj) => None,
-            GameObject::FireDepartment(_obj) => None,
-            GameObject::WeatherStation(_obj) => None,
-            GameObject::PoliceDepartment(_obj) => None,
-            GameObject::Forecast(obj) => Some(&obj.forecast),
+            AnyGameObject::GameObject(_obj) => None,
+            AnyGameObject::Player(_obj) => None,
+            AnyGameObject::Building(_obj) => None,
+            AnyGameObject::Warehouse(_obj) => None,
+            AnyGameObject::FireDepartment(_obj) => None,
+            AnyGameObject::WeatherStation(_obj) => None,
+            AnyGameObject::PoliceDepartment(_obj) => None,
+            AnyGameObject::Forecast(obj) => Some(&obj.forecast),
         }
     }
 
