@@ -1,10 +1,5 @@
 #![allow(dead_code, unused_imports)]
 
-use std::any::TypeId;
-use std::cell::{RefCell, RefMut};
-use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, Weak};
-
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -12,114 +7,72 @@ use crate::error::Error;
 /// A unit in the game.
 #[derive(Debug, Clone)]
 pub struct Unit {
-    context: Weak<Context>,
-    id: Str,
-    inner: RefCell<Option<UnitInner>>,
-}
-
-#[derive(Debug, Clone)]
-struct UnitInner {
-    unit: Arc<Mutex<UnitBase>>,
-    game_object: Arc<Mutex<game_object::GameObjectBase>>,
-}
-
-#[derive(Debug)]
-pub(crate) struct UnitBase {
-    pub(crate) owner: Option<Player>,
-    pub(crate) tile: Option<Tile>,
-    pub(crate) job: Job,
-    pub(crate) moves: i64,
-    pub(crate) energy: f64,
-    pub(crate) squad: List<Unit>,
-    pub(crate) acted: bool,
-    pub(crate) food: i64,
-    pub(crate) materials: i64,
-    pub(crate) starving: bool,
-    pub(crate) turns_to_die: i64,
-    pub(crate) movement_target: Option<Tile>,
 }
 
 impl Unit {
-    fn context(&self) -> Arc<Context> {
-        self.context.upgrade().expect("context dropped before end of game")
-    }
-
-    fn inner(&self) -> RefMut<UnitInner> {
-        let inner = self.inner.borrow_mut();
-        RefMut::map(inner, |cache| {
-            if let Some(resolved) = cache {
-                resolved
-            } else {
-                let obj: Unit = self.context().get_obj(&self.id);
-                *cache = obj.inner.borrow().clone();
-                cache.as_mut().unwrap()
-            }
-        })
-    }
-
 
     /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
-        self.inner().unit.lock().unwrap().owner.clone()
+        unimplemented!()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner().unit.lock().unwrap().tile.clone()
+        unimplemented!()
     }
 
     /// The Job this Unit was recruited to do.
     pub fn job(&self) -> Job {
-        self.inner().unit.lock().unwrap().job.clone()
+        unimplemented!()
     }
 
     /// How many moves this Unit has left this turn.
     pub fn moves(&self) -> i64 {
-        self.inner().unit.lock().unwrap().moves.clone()
+        unimplemented!()
     }
 
     /// The amount of energy this Unit has (from 0.0 to 100.0).
     pub fn energy(&self) -> f64 {
-        self.inner().unit.lock().unwrap().energy.clone()
+        unimplemented!()
     }
 
     /// The Units in the same squad as this Unit. Units in the same squad attack and defend
     /// together.
     pub fn squad(&self) -> List<Unit> {
-        self.inner().unit.lock().unwrap().squad.clone()
+        unimplemented!()
     }
 
     /// Whether this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner().unit.lock().unwrap().acted.clone()
+        unimplemented!()
     }
 
     /// The amount of food this Unit is holding.
     pub fn food(&self) -> i64 {
-        self.inner().unit.lock().unwrap().food.clone()
+        unimplemented!()
     }
 
     /// The amount of materials this Unit is holding.
     pub fn materials(&self) -> i64 {
-        self.inner().unit.lock().unwrap().materials.clone()
+        unimplemented!()
     }
 
     /// Whether this Unit is starving. Starving Units regenerate energy at half the rate they
     /// normally would while resting.
     pub fn starving(&self) -> bool {
-        self.inner().unit.lock().unwrap().starving.clone()
+        unimplemented!()
     }
 
     /// The number of turns before this Unit dies. This only applies to neutral fresh humans
     /// created from combat. Otherwise, 0.
     pub fn turns_to_die(&self) -> i64 {
-        self.inner().unit.lock().unwrap().turns_to_die.clone()
+        unimplemented!()
     }
 
     /// The tile this Unit is moving to. This only applies to neutral fresh humans spawned on the
     /// road. Otherwise, the tile this Unit is on.
     pub fn movement_target(&self) -> Option<Tile> {
-        self.inner().unit.lock().unwrap().movement_target.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -127,7 +80,7 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner().game_object.lock().unwrap().id.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -136,14 +89,14 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner().game_object.lock().unwrap().game_object_name.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner().game_object.lock().unwrap().logs.clone()
+        unimplemented!()
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile.
@@ -157,19 +110,11 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "move", args)
+        unimplemented!()
     }
 
     /// Harvests the food on an adjacent Tile.
@@ -183,19 +128,11 @@ impl Unit {
     /// True if successfully harvested, false otherwise.
     pub fn harvest(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "harvest", args)
+        unimplemented!()
     }
 
     /// Attacks an adjacent Tile. Costs an action for each Unit in this Unit's squad. Units in the
@@ -211,19 +148,11 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "attack", args)
+        unimplemented!()
     }
 
     /// Converts an adjacent Unit to your side.
@@ -237,19 +166,11 @@ impl Unit {
     /// True if successfully converted, false otherwise.
     pub fn convert(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "convert", args)
+        unimplemented!()
     }
 
     /// Constructs a Structure on an adjacent Tile.
@@ -266,22 +187,12 @@ impl Unit {
     /// True if successfully constructed a structure, false otherwise.
     pub fn construct(
         &self,
-        tile: &Tile,
-        type_: &str,
+        _tile: &Tile,
+        _type_: &str,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            type_: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            type_,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "construct", args)
+        unimplemented!()
     }
 
     /// Removes materials from an adjacent Tile's Structure. You cannot deconstruct friendly
@@ -296,19 +207,11 @@ impl Unit {
     /// True if successfully deconstructed, false otherwise.
     pub fn deconstruct(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "deconstruct", args)
+        unimplemented!()
     }
 
     /// Drops some of the given resource on or adjacent to the Unit's Tile. Does not count as an
@@ -328,25 +231,13 @@ impl Unit {
     /// True if successfully dropped the resource, false otherwise.
     pub fn drop(
         &self,
-        tile: &Tile,
-        resource: &str,
-        amount: i64,
+        _tile: &Tile,
+        _resource: &str,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            resource: &'a str,
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            resource,
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "drop", args)
+        unimplemented!()
     }
 
     /// Picks up some materials or food on or adjacent to the Unit's Tile. Does not count as an
@@ -366,25 +257,13 @@ impl Unit {
     /// True if successfully picked up a resource, false otherwise.
     pub fn pickup(
         &self,
-        tile: &Tile,
-        resource: &str,
-        amount: i64,
+        _tile: &Tile,
+        _resource: &str,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            resource: &'a str,
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            resource,
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "pickup", args)
+        unimplemented!()
     }
 
     /// Changes this Unit's Job. Must be at max energy (100.0) to change Jobs.
@@ -398,19 +277,11 @@ impl Unit {
     /// True if successfully changed Jobs, false otherwise.
     pub fn change_job(
         &self,
-        job: &str,
+        _job: &str,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            job: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            job,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "changeJob", args)
+        unimplemented!()
     }
 
     /// Regenerates energy. Must be in range of a friendly shelter to rest. Costs an action. Units
@@ -424,13 +295,7 @@ impl Unit {
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "rest", args)
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -443,54 +308,10 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        message: &str,
+        _message: &str,
     )
         -> Result<(), Error>
     {
-        struct Args<'a> {
-            message: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            message,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "log", args)
-    }
-
-    pub fn try_cast<T: Object>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T: Object>(&self) -> T {
-        self.context().get_obj(&self.id)
+        unimplemented!()
     }
 }
-
-impl ObjectInner for Unit {
-    fn to_bases(&self) -> Bases {
-        let inner = self.inner();
-        Bases {
-            context: Some(self.context.clone()),
-            id: Some(self.id.clone()),
-            unit: Some(Arc::clone(&inner.unit)),
-            game_object: Some(Arc::clone(&inner.game_object)),
-            ..Default::default()
-        }
-    }
-
-    fn from_bases(bases: Bases) -> Option<Self> {
-        let inner = UnitInner {
-            unit: bases.unit?,
-            game_object: bases.game_object?,
-        };
-
-        Some(Unit {
-            context: bases.context?,
-            id: bases.id?,
-            inner: RefCell::new(Some(inner)),
-        })
-    }
-}
-
-impl Object for Unit {}

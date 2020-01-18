@@ -1,10 +1,5 @@
 #![allow(dead_code, unused_imports)]
 
-use std::any::TypeId;
-use std::cell::{RefCell, RefMut};
-use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, Weak};
-
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -12,98 +7,58 @@ use crate::error::Error;
 /// A beaver in the game.
 #[derive(Debug, Clone)]
 pub struct Beaver {
-    context: Weak<Context>,
-    id: Str,
-    inner: RefCell<Option<BeaverInner>>,
-}
-
-#[derive(Debug, Clone)]
-struct BeaverInner {
-    beaver: Arc<Mutex<BeaverBase>>,
-    game_object: Arc<Mutex<game_object::GameObjectBase>>,
-}
-
-#[derive(Debug)]
-pub(crate) struct BeaverBase {
-    pub(crate) moves: i64,
-    pub(crate) owner: Player,
-    pub(crate) actions: i64,
-    pub(crate) tile: Option<Tile>,
-    pub(crate) health: i64,
-    pub(crate) turns_distracted: i64,
-    pub(crate) branches: i64,
-    pub(crate) food: i64,
-    pub(crate) job: Job,
-    pub(crate) recruited: bool,
 }
 
 impl Beaver {
-    fn context(&self) -> Arc<Context> {
-        self.context.upgrade().expect("context dropped before end of game")
-    }
-
-    fn inner(&self) -> RefMut<BeaverInner> {
-        let inner = self.inner.borrow_mut();
-        RefMut::map(inner, |cache| {
-            if let Some(resolved) = cache {
-                resolved
-            } else {
-                let obj: Beaver = self.context().get_obj(&self.id);
-                *cache = obj.inner.borrow().clone();
-                cache.as_mut().unwrap()
-            }
-        })
-    }
-
 
     /// How many moves this Beaver has left this turn.
     pub fn moves(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().moves.clone()
+        unimplemented!()
     }
 
     /// The Player that owns and can control this Beaver.
     pub fn owner(&self) -> Player {
-        self.inner().beaver.lock().unwrap().owner.clone()
+        unimplemented!()
     }
 
     /// The number of actions remaining for the Beaver this turn.
     pub fn actions(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().actions.clone()
+        unimplemented!()
     }
 
     /// The Tile this Beaver is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner().beaver.lock().unwrap().tile.clone()
+        unimplemented!()
     }
 
     /// How much health this Beaver has left.
     pub fn health(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().health.clone()
+        unimplemented!()
     }
 
     /// Number of turns this Beaver is distracted for (0 means not distracted).
     pub fn turns_distracted(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().turns_distracted.clone()
+        unimplemented!()
     }
 
     /// The amount of branches this Beaver is holding.
     pub fn branches(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().branches.clone()
+        unimplemented!()
     }
 
     /// The amount of food this Beaver is holding.
     pub fn food(&self) -> i64 {
-        self.inner().beaver.lock().unwrap().food.clone()
+        unimplemented!()
     }
 
     /// The Job this Beaver was recruited to do.
     pub fn job(&self) -> Job {
-        self.inner().beaver.lock().unwrap().job.clone()
+        unimplemented!()
     }
 
     /// True if the Beaver has finished being recruited and can do things, False otherwise.
     pub fn recruited(&self) -> bool {
-        self.inner().beaver.lock().unwrap().recruited.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -111,7 +66,7 @@ impl Beaver {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner().game_object.lock().unwrap().id.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -120,14 +75,14 @@ impl Beaver {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner().game_object.lock().unwrap().game_object_name.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner().game_object.lock().unwrap().logs.clone()
+        unimplemented!()
     }
 
     /// Moves this Beaver from its current Tile to an adjacent Tile.
@@ -141,19 +96,11 @@ impl Beaver {
     /// True if the move worked, false otherwise.
     pub fn move_(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "move", args)
+        unimplemented!()
     }
 
     /// Harvests the branches or food from a Spawner on an adjacent Tile.
@@ -167,19 +114,11 @@ impl Beaver {
     /// True if successfully harvested, false otherwise.
     pub fn harvest(
         &self,
-        spawner: &Spawner,
+        _spawner: &Spawner,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            spawner: &'a Spawner,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            spawner,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "harvest", args)
+        unimplemented!()
     }
 
     /// Attacks another adjacent beaver.
@@ -193,19 +132,11 @@ impl Beaver {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        beaver: &Beaver,
+        _beaver: &Beaver,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            beaver: &'a Beaver,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            beaver,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "attack", args)
+        unimplemented!()
     }
 
     /// Builds a lodge on the Beavers current Tile.
@@ -218,13 +149,7 @@ impl Beaver {
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "buildLodge", args)
+        unimplemented!()
     }
 
     /// Drops some of the given resource on the beaver's Tile.
@@ -244,25 +169,13 @@ impl Beaver {
     /// True if successfully dropped the resource, false otherwise.
     pub fn drop(
         &self,
-        tile: &Tile,
-        resource: &str,
-        amount: i64,
+        _tile: &Tile,
+        _resource: &str,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            resource: &'a str,
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            resource,
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "drop", args)
+        unimplemented!()
     }
 
     /// Picks up some branches or food on the beaver's tile.
@@ -282,25 +195,13 @@ impl Beaver {
     /// True if successfully picked up a resource, false otherwise.
     pub fn pickup(
         &self,
-        tile: &Tile,
-        resource: &str,
-        amount: i64,
+        _tile: &Tile,
+        _resource: &str,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            resource: &'a str,
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            resource,
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "pickup", args)
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -313,54 +214,10 @@ impl Beaver {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        message: &str,
+        _message: &str,
     )
         -> Result<(), Error>
     {
-        struct Args<'a> {
-            message: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            message,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "log", args)
-    }
-
-    pub fn try_cast<T: Object>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T: Object>(&self) -> T {
-        self.context().get_obj(&self.id)
+        unimplemented!()
     }
 }
-
-impl ObjectInner for Beaver {
-    fn to_bases(&self) -> Bases {
-        let inner = self.inner();
-        Bases {
-            context: Some(self.context.clone()),
-            id: Some(self.id.clone()),
-            beaver: Some(Arc::clone(&inner.beaver)),
-            game_object: Some(Arc::clone(&inner.game_object)),
-            ..Default::default()
-        }
-    }
-
-    fn from_bases(bases: Bases) -> Option<Self> {
-        let inner = BeaverInner {
-            beaver: bases.beaver?,
-            game_object: bases.game_object?,
-        };
-
-        Some(Beaver {
-            context: bases.context?,
-            id: bases.id?,
-            inner: RefCell::new(Some(inner)),
-        })
-    }
-}
-
-impl Object for Beaver {}

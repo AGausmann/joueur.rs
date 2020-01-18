@@ -1,10 +1,5 @@
 #![allow(dead_code, unused_imports)]
 
-use std::any::TypeId;
-use std::cell::{RefCell, RefMut};
-use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, Weak};
-
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -12,106 +7,65 @@ use crate::error::Error;
 /// A unit group in the game. This may consist of a ship and any number of crew.
 #[derive(Debug, Clone)]
 pub struct Unit {
-    context: Weak<Context>,
-    id: Str,
-    inner: RefCell<Option<UnitInner>>,
-}
-
-#[derive(Debug, Clone)]
-struct UnitInner {
-    unit: Arc<Mutex<UnitBase>>,
-    game_object: Arc<Mutex<game_object::GameObjectBase>>,
-}
-
-#[derive(Debug)]
-pub(crate) struct UnitBase {
-    pub(crate) owner: Option<Player>,
-    pub(crate) tile: Option<Tile>,
-    pub(crate) ship_health: i64,
-    pub(crate) crew: i64,
-    pub(crate) crew_health: i64,
-    pub(crate) gold: i64,
-    pub(crate) acted: bool,
-    pub(crate) moves: i64,
-    pub(crate) path: List<Tile>,
-    pub(crate) target_port: Option<Port>,
-    pub(crate) stun_turns: i64,
 }
 
 impl Unit {
-    fn context(&self) -> Arc<Context> {
-        self.context.upgrade().expect("context dropped before end of game")
-    }
-
-    fn inner(&self) -> RefMut<UnitInner> {
-        let inner = self.inner.borrow_mut();
-        RefMut::map(inner, |cache| {
-            if let Some(resolved) = cache {
-                resolved
-            } else {
-                let obj: Unit = self.context().get_obj(&self.id);
-                *cache = obj.inner.borrow().clone();
-                cache.as_mut().unwrap()
-            }
-        })
-    }
-
 
     /// The Player that owns and can control this Unit, or None if the Unit is neutral.
     pub fn owner(&self) -> Option<Player> {
-        self.inner().unit.lock().unwrap().owner.clone()
+        unimplemented!()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        self.inner().unit.lock().unwrap().tile.clone()
+        unimplemented!()
     }
 
     /// If a ship is on this Tile, how much health it has remaining. 0 for no ship.
     pub fn ship_health(&self) -> i64 {
-        self.inner().unit.lock().unwrap().ship_health.clone()
+        unimplemented!()
     }
 
     /// How many crew are on this Tile. This number will always be <= crewHealth.
     pub fn crew(&self) -> i64 {
-        self.inner().unit.lock().unwrap().crew.clone()
+        unimplemented!()
     }
 
     /// How much total health the crew on this Tile have.
     pub fn crew_health(&self) -> i64 {
-        self.inner().unit.lock().unwrap().crew_health.clone()
+        unimplemented!()
     }
 
     /// How much gold this Unit is carrying.
     pub fn gold(&self) -> i64 {
-        self.inner().unit.lock().unwrap().gold.clone()
+        unimplemented!()
     }
 
     /// Whether this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        self.inner().unit.lock().unwrap().acted.clone()
+        unimplemented!()
     }
 
     /// How many more times this Unit may move this turn.
     pub fn moves(&self) -> i64 {
-        self.inner().unit.lock().unwrap().moves.clone()
+        unimplemented!()
     }
 
     /// (Merchants only) The path this Unit will follow. The first element is the Tile this Unit
     /// will move to next.
     pub fn path(&self) -> List<Tile> {
-        self.inner().unit.lock().unwrap().path.clone()
+        unimplemented!()
     }
 
     /// (Merchants only) The Port this Unit is moving to.
     pub fn target_port(&self) -> Option<Port> {
-        self.inner().unit.lock().unwrap().target_port.clone()
+        unimplemented!()
     }
 
     /// (Merchants only) The number of turns this merchant ship won't be able to move. They will
     /// still attack. Merchant ships are stunned when they're attacked.
     pub fn stun_turns(&self) -> i64 {
-        self.inner().unit.lock().unwrap().stun_turns.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -119,7 +73,7 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        self.inner().game_object.lock().unwrap().id.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -128,14 +82,14 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        self.inner().game_object.lock().unwrap().game_object_name.clone()
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        self.inner().game_object.lock().unwrap().logs.clone()
+        unimplemented!()
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile. If this Unit merges with another
@@ -151,19 +105,11 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        tile: &Tile,
+        _tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "move", args)
+        unimplemented!()
     }
 
     /// Attacks either the 'crew' or 'ship' on a Tile in range.
@@ -180,22 +126,12 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        tile: &Tile,
-        target: &str,
+        _tile: &Tile,
+        _target: &str,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            target: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            target,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "attack", args)
+        unimplemented!()
     }
 
     /// Buries gold on this Unit's Tile. Gold must be a certain distance away for it to get
@@ -211,19 +147,11 @@ impl Unit {
     /// True if successfully buried, false otherwise.
     pub fn bury(
         &self,
-        amount: i64,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "bury", args)
+        unimplemented!()
     }
 
     /// Digs up gold on this Unit's Tile.
@@ -238,19 +166,11 @@ impl Unit {
     /// True if successfully dug up, false otherwise.
     pub fn dig(
         &self,
-        amount: i64,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "dig", args)
+        unimplemented!()
     }
 
     /// Puts gold into an adjacent Port. If that Port is the Player's port, the gold is added to
@@ -266,19 +186,11 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn deposit(
         &self,
-        amount: i64,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "deposit", args)
+        unimplemented!()
     }
 
     /// Takes gold from the Player. You can only withdraw from your own Port.
@@ -292,19 +204,11 @@ impl Unit {
     /// True if successfully withdrawn, false otherwise.
     pub fn withdraw(
         &self,
-        amount: i64,
+        _amount: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            amount: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            amount,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "withdraw", args)
+        unimplemented!()
     }
 
     /// Moves a number of crew from this Unit to the given Tile. This will consume a move from
@@ -325,25 +229,13 @@ impl Unit {
     /// True if successfully split, false otherwise.
     pub fn split(
         &self,
-        tile: &Tile,
-        amount: i64,
-        gold: i64,
+        _tile: &Tile,
+        _amount: i64,
+        _gold: i64,
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            tile: &'a Tile,
-            amount: i64,
-            gold: i64,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            tile,
-            amount,
-            gold,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "split", args)
+        unimplemented!()
     }
 
     /// Regenerates this Unit's health. Must be used in range of a port.
@@ -356,13 +248,7 @@ impl Unit {
     )
         -> Result<bool, Error>
     {
-        struct Args<'a> {
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "rest", args)
+        unimplemented!()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -375,54 +261,10 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        message: &str,
+        _message: &str,
     )
         -> Result<(), Error>
     {
-        struct Args<'a> {
-            message: &'a str,
-            _a: PhantomData< &'a () >,
-        }
-        let args = Args {
-            message,
-            _a: PhantomData,
-        };
-        self.context().run(&self.id, "log", args)
-    }
-
-    pub fn try_cast<T: Object>(&self) -> Option<T> {
-        self.context().try_get_obj(&self.id)
-    }
-
-    pub fn cast<T: Object>(&self) -> T {
-        self.context().get_obj(&self.id)
+        unimplemented!()
     }
 }
-
-impl ObjectInner for Unit {
-    fn to_bases(&self) -> Bases {
-        let inner = self.inner();
-        Bases {
-            context: Some(self.context.clone()),
-            id: Some(self.id.clone()),
-            unit: Some(Arc::clone(&inner.unit)),
-            game_object: Some(Arc::clone(&inner.game_object)),
-            ..Default::default()
-        }
-    }
-
-    fn from_bases(bases: Bases) -> Option<Self> {
-        let inner = UnitInner {
-            unit: bases.unit?,
-            game_object: bases.game_object?,
-        };
-
-        Some(Unit {
-            context: bases.context?,
-            id: bases.id?,
-            inner: RefCell::new(Some(inner)),
-        })
-    }
-}
-
-impl Object for Unit {}
