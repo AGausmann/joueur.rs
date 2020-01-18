@@ -140,12 +140,14 @@ impl Port {
 impl inner::ObjectInner for Port {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_port()?;
-        handle.try_as_game_object()?;
-        Some(Port {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_port().is_some() {
+            Some(Port {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for Port {}

@@ -106,12 +106,14 @@ impl Spider {
 impl inner::ObjectInner for Spider {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_spider()?;
-        handle.try_as_game_object()?;
-        Some(Spider {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_spider().is_some() {
+            Some(Spider {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for Spider {}

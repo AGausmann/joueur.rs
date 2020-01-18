@@ -115,12 +115,14 @@ impl Bottle {
 impl inner::ObjectInner for Bottle {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_bottle()?;
-        handle.try_as_game_object()?;
-        Some(Bottle {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_bottle().is_some() {
+            Some(Bottle {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for Bottle {}

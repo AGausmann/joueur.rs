@@ -159,12 +159,14 @@ impl Building {
 impl inner::ObjectInner for Building {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_building()?;
-        handle.try_as_game_object()?;
-        Some(Building {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_building().is_some() {
+            Some(Building {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for Building {}

@@ -84,14 +84,14 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
 impl inner::ObjectInner for ${obj_key} {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_${underscore(obj_key)}()?;
-% for parent in shared['rs']['all_parents'](obj):
-        handle.try_as_${underscore(parent)}()?;
-% endfor
-        Some(${obj_key} {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_${underscore(obj_key)}().is_some() {
+            Some(${obj_key} {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for ${obj_key} {}

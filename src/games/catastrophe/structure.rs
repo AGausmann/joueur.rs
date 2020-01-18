@@ -120,12 +120,14 @@ impl Structure {
 impl inner::ObjectInner for Structure {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_structure()?;
-        handle.try_as_game_object()?;
-        Some(Structure {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_structure().is_some() {
+            Some(Structure {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for Structure {}

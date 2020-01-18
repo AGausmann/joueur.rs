@@ -208,13 +208,14 @@ impl PoliceDepartment {
 impl inner::ObjectInner for PoliceDepartment {
     fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
         let handle = game_obj.lock().unwrap();
-        handle.try_as_police_department()?;
-        handle.try_as_building()?;
-        handle.try_as_game_object()?;
-        Some(PoliceDepartment {
-            inner: Arc::clone(&game_obj),
-            context: context.clone(),
-        })
+        if handle.try_as_police_department().is_some() {
+            Some(PoliceDepartment {
+                inner: Arc::clone(&game_obj),
+                context: context.clone(),
+            })
+        } else {
+            None
+        }
     }
 }
 impl Object for PoliceDepartment {}
