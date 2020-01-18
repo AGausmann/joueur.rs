@@ -1,7 +1,6 @@
 //! There's an infestation of enemy spiders challenging your queen broodmother spider! Protect her
 //! and attack the other broodmother in this turn based, node based, game.
 
-mod ai;
 mod brood_mother;
 mod cutter;
 mod game;
@@ -14,7 +13,6 @@ mod spitter;
 mod weaver;
 mod web;
 
-pub use ai::AI;
 pub use brood_mother::BroodMother;
 pub use cutter::Cutter;
 pub use game::Game;

@@ -1,6 +1,5 @@
 //! Gather branches and build up your lodge as beavers fight to survive.
 
-mod ai;
 mod beaver;
 mod game;
 mod game_object;
@@ -9,7 +8,6 @@ mod player;
 mod spawner;
 mod tile;
 
-pub use ai::AI;
 pub use beaver::Beaver;
 pub use game::Game;
 pub use game_object::GameObject;

@@ -1,7 +1,6 @@
 //! Two player grid based game where each player tries to burn down the other player's buildings.
 //! Let it burn.
 
-mod ai;
 mod building;
 mod fire_department;
 mod forecast;
@@ -12,7 +11,6 @@ mod police_department;
 mod warehouse;
 mod weather_station;
 
-pub use ai::AI;
 pub use building::Building;
 pub use fire_department::FireDepartment;
 pub use forecast::Forecast;

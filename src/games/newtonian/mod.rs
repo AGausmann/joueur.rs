@@ -1,6 +1,5 @@
 //! Combine elements and be the first scientists to create fusion.
 
-mod ai;
 mod game;
 mod game_object;
 mod job;
@@ -9,7 +8,6 @@ mod player;
 mod tile;
 mod unit;
 
-pub use ai::AI;
 pub use game::Game;
 pub use game_object::GameObject;
 pub use job::Job;
