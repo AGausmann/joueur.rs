@@ -1,6 +1,9 @@
 <%include file="functions.noCreer" />\
 #![allow(dead_code, unused_imports)]
 
+use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -12,14 +15,29 @@ ${shared['rs']['obj_doc'](obj, '/// ')}
 % endif
 #[derive(Debug, Clone)]
 pub struct ${obj_key} {
+    context: Weak<Mutex<inner::Context>>,
+    inner: Arc<Mutex<inner::GameObject>>,
 }
 
 impl ${obj_key} {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut inner::Context) -> R,
+    {
+        let context = self.context.upgrade().expect("context dropped before end of game");
+        let mut handle = context.lock().unwrap();
+        f(&mut handle)
+    }
 % for attr_name, attr, parent in shared['rs']['all_attributes'](obj):
 
 ${shared['rs']['attr_doc'](attr, parent, '    /// ')}
     pub fn ${shared['rs']['sanitize'](underscore(attr_name))}(&self) -> ${shared['rs']['return_type'](attr['type'])} {
+% if obj_key == 'Game':
         unimplemented!()
+% else:
+        self.inner.lock().unwrap().as_${underscore(parent or obj_key)}()
+            .${shared['rs']['sanitize'](underscore(attr_name))}.clone()
+% endif
     }
 % endfor
 % for func_name, func, parent in shared['rs']['all_functions'](obj):
@@ -28,7 +46,7 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
     pub fn ${shared['rs']['sanitize'](underscore(func_name))}(
         &self,
 % for arg in func['arguments']:
-        _${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'])},
+        ${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'])},
 % endfor
     )
 % if func['returns']:
@@ -37,7 +55,19 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
         -> Result<(), Error>
 % endif
     {
-        unimplemented!()
+        struct Args<'a> {
+% for arg in func['arguments']:
+            ${shared['rs']['sanitize'](underscore(arg['name']))}: ${shared['rs']['arg_type'](arg['type'], 'a')},
+% endfor
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+% for arg in func['arguments']:
+            ${shared['rs']['sanitize'](underscore(arg['name']))},
+% endfor
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "${func_name}", args))
     }
 % endfor
 }

@@ -1,10 +1,14 @@
 <%include file="functions.noCreer" />\
 ${shared['rs']['obj_doc'](game, '//! ')}
 
-% for obj_key in sorted(list(game_objs.keys()) + ['Game']):
+mod inner;
+
+% for obj_key in game_objs.keys():
 mod ${underscore(obj_key)};
 % endfor
+mod game;
 
-% for obj_key in sorted(list(game_objs.keys()) + ['Game']):
+% for obj_key in game_objs.keys():
 pub use ${underscore(obj_key)}::${obj_key};
 % endfor
+pub use game::Game;

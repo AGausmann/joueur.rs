@@ -1,5 +1,8 @@
 #![allow(dead_code, unused_imports)]
 
+use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -7,9 +10,19 @@ use crate::error::Error;
 /// Holds top-level game state and settings for the current game.
 #[derive(Debug, Clone)]
 pub struct Game {
+    context: Weak<Mutex<inner::Context>>,
+    inner: Arc<Mutex<inner::GameObject>>,
 }
 
 impl Game {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut inner::Context) -> R,
+    {
+        let context = self.context.upgrade().expect("context dropped before end of game");
+        let mut handle = context.lock().unwrap();
+        f(&mut handle)
+    }
 
     /// A mapping of every game object's ID to the actual game object. Primarily used by the server
     /// and client to easily refer to the game objects via ID.

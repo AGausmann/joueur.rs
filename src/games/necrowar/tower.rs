@@ -1,5 +1,8 @@
 #![allow(dead_code, unused_imports)]
 
+use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -7,38 +10,54 @@ use crate::error::Error;
 /// A tower in the game. Used to combat enemy waves.
 #[derive(Debug, Clone)]
 pub struct Tower {
+    context: Weak<Mutex<inner::Context>>,
+    inner: Arc<Mutex<inner::GameObject>>,
 }
 
 impl Tower {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut inner::Context) -> R,
+    {
+        let context = self.context.upgrade().expect("context dropped before end of game");
+        let mut handle = context.lock().unwrap();
+        f(&mut handle)
+    }
 
     /// The player that built / owns this tower.
     pub fn owner(&self) -> Option<Player> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .owner.clone()
     }
 
     /// The Tile this Tower is on.
     pub fn tile(&self) -> Tile {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .tile.clone()
     }
 
     /// What type of tower this is (it's job).
     pub fn job(&self) -> TowerJob {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .job.clone()
     }
 
     /// How much remaining health this tower has.
     pub fn health(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .health.clone()
     }
 
     /// Whether this tower has attacked this turn or not.
     pub fn attacked(&self) -> bool {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .attacked.clone()
     }
 
     /// How many turns are left before it can fire again.
     pub fn cooldown(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_tower()
+            .cooldown.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -46,7 +65,8 @@ impl Tower {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .id.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -55,14 +75,16 @@ impl Tower {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .game_object_name.clone()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .logs.clone()
     }
 
     /// Attacks an enemy unit on an tile within it's range.
@@ -76,11 +98,19 @@ impl Tower {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "attack", args))
     }
 
     /// _Inherited from [`GameObject`]_
@@ -93,10 +123,18 @@ impl Tower {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
         -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "log", args))
     }
 }

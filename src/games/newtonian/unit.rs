@@ -1,5 +1,8 @@
 #![allow(dead_code, unused_imports)]
 
+use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -7,71 +10,93 @@ use crate::error::Error;
 /// A unit in the game. May be a manager, intern, or physicist.
 #[derive(Debug, Clone)]
 pub struct Unit {
+    context: Weak<Mutex<inner::Context>>,
+    inner: Arc<Mutex<inner::GameObject>>,
 }
 
 impl Unit {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut inner::Context) -> R,
+    {
+        let context = self.context.upgrade().expect("context dropped before end of game");
+        let mut handle = context.lock().unwrap();
+        f(&mut handle)
+    }
 
     /// The Player that owns and can control this Unit.
     pub fn owner(&self) -> Option<Player> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .owner.clone()
     }
 
     /// The Tile this Unit is on.
     pub fn tile(&self) -> Option<Tile> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .tile.clone()
     }
 
     /// The Job this Unit has.
     pub fn job(&self) -> Job {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .job.clone()
     }
 
     /// The remaining health of a unit.
     pub fn health(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .health.clone()
     }
 
     /// Whether or not this Unit has performed its action this turn.
     pub fn acted(&self) -> bool {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .acted.clone()
     }
 
     /// The number of moves this unit has left this turn.
     pub fn moves(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .moves.clone()
     }
 
     /// The amount of redium ore carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn redium_ore(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .redium_ore.clone()
     }
 
     /// The amount of redium carried by this unit. (0 to job carry capacity - other carried items).
     pub fn redium(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .redium.clone()
     }
 
     /// The amount of blueium ore carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn blueium_ore(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .blueium_ore.clone()
     }
 
     /// The amount of blueium carried by this unit. (0 to job carry capacity - other carried
     /// items).
     pub fn blueium(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .blueium.clone()
     }
 
     /// Duration the unit is stunned. (0 to the game constant stunTime).
     pub fn stun_time(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .stun_time.clone()
     }
 
     /// Duration of stun immunity. (0 to timeImmune).
     pub fn stun_immune(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_unit()
+            .stun_immune.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -79,7 +104,8 @@ impl Unit {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .id.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -88,14 +114,16 @@ impl Unit {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .game_object_name.clone()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .logs.clone()
     }
 
     /// Drops materials at the units feet or adjacent tile.
@@ -114,13 +142,25 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn drop(
         &self,
-        _tile: &Tile,
-        _amount: i64,
-        _material: &str,
+        tile: &Tile,
+        amount: i64,
+        material: &str,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            amount: i64,
+            material: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            amount,
+            material,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "drop", args))
     }
 
     /// Picks up material at the units feet or adjacent tile.
@@ -140,13 +180,25 @@ impl Unit {
     /// True if successfully deposited, false otherwise.
     pub fn pickup(
         &self,
-        _tile: &Tile,
-        _amount: i64,
-        _material: &str,
+        tile: &Tile,
+        amount: i64,
+        material: &str,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            amount: i64,
+            material: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            amount,
+            material,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "pickup", args))
     }
 
     /// Moves this Unit from its current Tile to an adjacent Tile.
@@ -160,11 +212,19 @@ impl Unit {
     /// True if it moved, false otherwise.
     pub fn move_(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "move", args))
     }
 
     /// Attacks a unit on an adjacent tile.
@@ -178,11 +238,19 @@ impl Unit {
     /// True if successfully attacked, false otherwise.
     pub fn attack(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "attack", args))
     }
 
     /// Makes the unit do something to a machine or unit adjacent to its tile. Interns sabotage,
@@ -197,11 +265,19 @@ impl Unit {
     /// True if successfully acted, false otherwise.
     pub fn act(
         &self,
-        _tile: &Tile,
+        tile: &Tile,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            tile: &'a Tile,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            tile,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "act", args))
     }
 
     /// _Inherited from [`GameObject`]_
@@ -214,10 +290,18 @@ impl Unit {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
         -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "log", args))
     }
 }

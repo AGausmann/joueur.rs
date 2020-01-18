@@ -1,5 +1,8 @@
 #![allow(dead_code, unused_imports)]
 
+use std::marker::PhantomData;
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
@@ -7,13 +10,24 @@ use crate::error::Error;
 /// A Spiderling that can cut existing Webs.
 #[derive(Debug, Clone)]
 pub struct Cutter {
+    context: Weak<Mutex<inner::Context>>,
+    inner: Arc<Mutex<inner::GameObject>>,
 }
 
 impl Cutter {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut inner::Context) -> R,
+    {
+        let context = self.context.upgrade().expect("context dropped before end of game");
+        let mut handle = context.lock().unwrap();
+        f(&mut handle)
+    }
 
     /// The Web that this Cutter is trying to cut. None if not cutting.
     pub fn cutting_web(&self) -> Option<Web> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_cutter()
+            .cutting_web.clone()
     }
 
     /// _Inherited from [`Spiderling`]_
@@ -21,7 +35,8 @@ impl Cutter {
     /// When empty string this Spiderling is not busy, and can act. Otherwise a string representing
     /// what it is busy with, e.g. 'Moving', 'Attacking'.
     pub fn busy(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spiderling()
+            .busy.clone()
     }
 
     /// _Inherited from [`Spiderling`]_
@@ -29,7 +44,8 @@ impl Cutter {
     /// How much work needs to be done for this Spiderling to finish being busy. See docs for the
     /// Work forumla.
     pub fn work_remaining(&self) -> f64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spiderling()
+            .work_remaining.clone()
     }
 
     /// _Inherited from [`Spiderling`]_
@@ -37,42 +53,48 @@ impl Cutter {
     /// The number of Spiderlings busy with the same work this Spiderling is doing, speeding up the
     /// task.
     pub fn number_of_coworkers(&self) -> i64 {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spiderling()
+            .number_of_coworkers.clone()
     }
 
     /// _Inherited from [`Spiderling`]_
     ///
     /// The Web this Spiderling is using to move. None if it is not moving.
     pub fn moving_on_web(&self) -> Option<Web> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spiderling()
+            .moving_on_web.clone()
     }
 
     /// _Inherited from [`Spiderling`]_
     ///
     /// The Nest this Spiderling is moving to. None if it is not moving.
     pub fn moving_to_nest(&self) -> Option<Nest> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spiderling()
+            .moving_to_nest.clone()
     }
 
     /// _Inherited from [`Spider`]_
     ///
     /// The Player that owns this Spider, and can command it.
     pub fn owner(&self) -> Player {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spider()
+            .owner.clone()
     }
 
     /// _Inherited from [`Spider`]_
     ///
     /// The Nest that this Spider is currently on. None when moving on a Web.
     pub fn nest(&self) -> Option<Nest> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spider()
+            .nest.clone()
     }
 
     /// _Inherited from [`Spider`]_
     ///
     /// If this Spider is dead and has been removed from the game.
     pub fn is_dead(&self) -> bool {
-        unimplemented!()
+        self.inner.lock().unwrap().as_spider()
+            .is_dead.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -80,7 +102,8 @@ impl Cutter {
     /// A unique id for each instance of a GameObject or a sub class. Used for client and server
     /// communication. Should never change value after being set.
     pub fn id(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .id.clone()
     }
 
     /// _Inherited from [`GameObject`]_
@@ -89,14 +112,16 @@ impl Cutter {
     /// reflection to create new instances on clients, but exposed for convenience should AIs want
     /// this data.
     pub fn game_object_name(&self) -> Str {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .game_object_name.clone()
     }
 
     /// _Inherited from [`GameObject`]_
     ///
     /// Any strings logged will be stored here. Intended for debugging.
     pub fn logs(&self) -> List<Str> {
-        unimplemented!()
+        self.inner.lock().unwrap().as_game_object()
+            .logs.clone()
     }
 
     /// Cuts a web, destroying it, and any Spiderlings on it.
@@ -111,11 +136,19 @@ impl Cutter {
     /// True if the cut was successfully started, false otherwise.
     pub fn cut(
         &self,
-        _web: &Web,
+        web: &Web,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "cut", args))
     }
 
     /// _Inherited from [`Spiderling`]_
@@ -131,11 +164,19 @@ impl Cutter {
     /// True if the move was successful, false otherwise.
     pub fn move_(
         &self,
-        _web: &Web,
+        web: &Web,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            web: &'a Web,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            web,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "move", args))
     }
 
     /// _Inherited from [`Spiderling`]_
@@ -151,11 +192,19 @@ impl Cutter {
     /// True if the attack was successful, false otherwise.
     pub fn attack(
         &self,
-        _spiderling: &Spiderling,
+        spiderling: &Spiderling,
     )
         -> Result<bool, Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            spiderling: &'a Spiderling,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            spiderling,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "attack", args))
     }
 
     /// _Inherited from [`GameObject`]_
@@ -168,10 +217,18 @@ impl Cutter {
     /// - _message_ - A string to add to this GameObject's log. Intended for debugging.
     pub fn log(
         &self,
-        _message: &str,
+        message: &str,
     )
         -> Result<(), Error>
     {
-        unimplemented!()
+        struct Args<'a> {
+            message: &'a str,
+            _a: PhantomData< &'a () >,
+        }
+        let args = Args {
+            message,
+            _a: PhantomData,
+        };
+        self.with_context(|cx| cx.run(&self.id(), "log", args))
     }
 }
