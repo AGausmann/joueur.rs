@@ -26,3 +26,5 @@ pub use spitter::Spitter;
 pub use weaver::Weaver;
 pub use cutter::Cutter;
 pub use game::Game;
+
+pub use inner::Object;

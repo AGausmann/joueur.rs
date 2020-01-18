@@ -70,4 +70,29 @@ ${shared['rs']['func_doc'](func, parent, '    /// ')}
         self.with_context(|cx| cx.run(&self.id(), "${func_name}", args))
     }
 % endfor
+
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
+        T::from_game_object(&self.inner, &self.context)
+    }
+
+    pub fn cast<T: Object>(&self) -> T {
+        self.try_cast().unwrap()
+    }
 }
+% if obj_key != 'Game':
+
+impl inner::ObjectInner for ${obj_key} {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+        let handle = game_obj.lock().unwrap();
+        handle.try_as_${underscore(obj_key)}()?;
+% for parent in shared['rs']['all_parents'](obj):
+        handle.try_as_${underscore(parent)}()?;
+% endfor
+        Some(${obj_key} {
+            inner: Arc::clone(&game_obj),
+            context: context.clone(),
+        })
+    }
+}
+impl Object for ${obj_key} {}
+% endif

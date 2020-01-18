@@ -106,4 +106,12 @@ impl Game {
     pub fn max_forecast_intensity(&self) -> i64 {
         unimplemented!()
     }
+
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
+        T::from_game_object(&self.inner, &self.context)
+    }
+
+    pub fn cast<T: Object>(&self) -> T {
+        self.try_cast().unwrap()
+    }
 }

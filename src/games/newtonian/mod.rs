@@ -17,3 +17,5 @@ pub use machine::Machine;
 pub use unit::Unit;
 pub use job::Job;
 pub use game::Game;
+
+pub use inner::Object;

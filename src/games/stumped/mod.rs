@@ -17,3 +17,5 @@ pub use spawner::Spawner;
 pub use beaver::Beaver;
 pub use job::Job;
 pub use game::Game;
+
+pub use inner::Object;

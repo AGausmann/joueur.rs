@@ -85,4 +85,12 @@ impl Game {
     pub fn checker_moved_jumped(&self) -> bool {
         unimplemented!()
     }
+
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
+        T::from_game_object(&self.inner, &self.context)
+    }
+
+    pub fn cast<T: Object>(&self) -> T {
+        self.try_cast().unwrap()
+    }
 }

@@ -20,3 +20,5 @@ pub use furnishing::Furnishing;
 pub use bottle::Bottle;
 pub use young_gun::YoungGun;
 pub use game::Game;
+
+pub use inner::Object;

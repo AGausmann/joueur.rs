@@ -15,3 +15,5 @@ pub use tile::Tile;
 pub use port::Port;
 pub use unit::Unit;
 pub use game::Game;
+
+pub use inner::Object;

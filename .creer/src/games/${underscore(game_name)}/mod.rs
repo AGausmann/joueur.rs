@@ -12,3 +12,5 @@ mod game;
 pub use ${underscore(obj_key)}::${obj_key};
 % endfor
 pub use game::Game;
+
+pub use inner::Object;

@@ -1,22 +1,31 @@
 #![allow(unused_imports, dead_code)]
 
+use std::sync::{Arc, Mutex, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Context {
+pub struct Context {
     game: GameBase,
 }
 
 impl Context {
-    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
 
+pub trait Object: ObjectInner {
+}
+
+pub trait ObjectInner: Sized {
+    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+}
+
 #[derive(Debug, Clone)]
-pub(crate) enum GameObject {
+pub enum GameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Body(BodyInner),
@@ -26,15 +35,15 @@ pub(crate) enum GameObject {
 }
 
 impl GameObject {
-    pub(crate) fn id(&self) -> Str {
+    pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
 
-    pub(crate) fn object_type(&self) -> Str {
+    pub fn object_type(&self) -> Str {
         self.as_game_object().game_object_name.clone()
     }
 
-    pub(crate) fn try_as_game_object(&self) -> Option< &GameObjectBase > {
+    pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
             GameObject::GameObject(obj) => Some(&obj.game_object),
             GameObject::Player(obj) => Some(&obj.game_object),
@@ -45,11 +54,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_game_object(&self) -> &GameObjectBase {
+    pub fn as_game_object(&self) -> &GameObjectBase {
         self.try_as_game_object().expect("unreachable: unable to cast to GameObject")
     }
 
-    pub(crate) fn try_as_player(&self) -> Option< &PlayerBase > {
+    pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(obj) => Some(&obj.player),
@@ -60,11 +69,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_player(&self) -> &PlayerBase {
+    pub fn as_player(&self) -> &PlayerBase {
         self.try_as_player().expect("unreachable: unable to cast to Player")
     }
 
-    pub(crate) fn try_as_body(&self) -> Option< &BodyBase > {
+    pub fn try_as_body(&self) -> Option< &BodyBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -75,11 +84,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_body(&self) -> &BodyBase {
+    pub fn as_body(&self) -> &BodyBase {
         self.try_as_body().expect("unreachable: unable to cast to Body")
     }
 
-    pub(crate) fn try_as_projectile(&self) -> Option< &ProjectileBase > {
+    pub fn try_as_projectile(&self) -> Option< &ProjectileBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -90,11 +99,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_projectile(&self) -> &ProjectileBase {
+    pub fn as_projectile(&self) -> &ProjectileBase {
         self.try_as_projectile().expect("unreachable: unable to cast to Projectile")
     }
 
-    pub(crate) fn try_as_unit(&self) -> Option< &UnitBase > {
+    pub fn try_as_unit(&self) -> Option< &UnitBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -105,11 +114,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_unit(&self) -> &UnitBase {
+    pub fn as_unit(&self) -> &UnitBase {
         self.try_as_unit().expect("unreachable: unable to cast to Unit")
     }
 
-    pub(crate) fn try_as_job(&self) -> Option< &JobBase > {
+    pub fn try_as_job(&self) -> Option< &JobBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -120,156 +129,156 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_job(&self) -> &JobBase {
+    pub fn as_job(&self) -> &JobBase {
         self.try_as_job().expect("unreachable: unable to cast to Job")
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameObjectInner {
-    pub(crate) game_object: GameObjectBase,
+pub struct GameObjectInner {
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PlayerInner {
-    pub(crate) player: PlayerBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct PlayerInner {
+    pub player: PlayerBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct BodyInner {
-    pub(crate) body: BodyBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct BodyInner {
+    pub body: BodyBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ProjectileInner {
-    pub(crate) projectile: ProjectileBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct ProjectileInner {
+    pub projectile: ProjectileBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct UnitInner {
-    pub(crate) unit: UnitBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct UnitInner {
+    pub unit: UnitBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct JobInner {
-    pub(crate) job: JobBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct JobInner {
+    pub job: JobBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameObjectBase {
-    pub(crate) id: Str,
-    pub(crate) game_object_name: Str,
-    pub(crate) logs: List<Str>,
+pub struct GameObjectBase {
+    pub id: Str,
+    pub game_object_name: Str,
+    pub logs: List<Str>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PlayerBase {
-    pub(crate) name: Str,
-    pub(crate) client_type: Str,
-    pub(crate) won: bool,
-    pub(crate) lost: bool,
-    pub(crate) reason_won: Str,
-    pub(crate) reason_lost: Str,
-    pub(crate) time_remaining: f64,
-    pub(crate) opponent: Player,
-    pub(crate) units: List<Unit>,
-    pub(crate) projectiles: List<Projectile>,
-    pub(crate) money: i64,
-    pub(crate) home_base: Body,
-    pub(crate) victory_points: i64,
+pub struct PlayerBase {
+    pub name: Str,
+    pub client_type: Str,
+    pub won: bool,
+    pub lost: bool,
+    pub reason_won: Str,
+    pub reason_lost: Str,
+    pub time_remaining: f64,
+    pub opponent: Player,
+    pub units: List<Unit>,
+    pub projectiles: List<Projectile>,
+    pub money: i64,
+    pub home_base: Body,
+    pub victory_points: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct BodyBase {
-    pub(crate) owner: Option<Player>,
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) radius: f64,
-    pub(crate) body_type: Str,
-    pub(crate) material_type: Str,
-    pub(crate) amount: i64,
+pub struct BodyBase {
+    pub owner: Option<Player>,
+    pub x: f64,
+    pub y: f64,
+    pub radius: f64,
+    pub body_type: Str,
+    pub material_type: Str,
+    pub amount: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ProjectileBase {
-    pub(crate) owner: Option<Player>,
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) target: Unit,
-    pub(crate) fuel: i64,
-    pub(crate) energy: i64,
+pub struct ProjectileBase {
+    pub owner: Option<Player>,
+    pub x: f64,
+    pub y: f64,
+    pub target: Unit,
+    pub fuel: i64,
+    pub energy: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct UnitBase {
-    pub(crate) owner: Option<Player>,
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) dash_x: f64,
-    pub(crate) dash_y: f64,
-    pub(crate) job: Job,
-    pub(crate) energy: i64,
-    pub(crate) shield: i64,
-    pub(crate) acted: bool,
-    pub(crate) moves: f64,
-    pub(crate) genarium: i64,
-    pub(crate) rarium: i64,
-    pub(crate) legendarium: i64,
-    pub(crate) mythicite: i64,
-    pub(crate) is_busy: bool,
-    pub(crate) protector: Option<Unit>,
+pub struct UnitBase {
+    pub owner: Option<Player>,
+    pub x: f64,
+    pub y: f64,
+    pub dash_x: f64,
+    pub dash_y: f64,
+    pub job: Job,
+    pub energy: i64,
+    pub shield: i64,
+    pub acted: bool,
+    pub moves: f64,
+    pub genarium: i64,
+    pub rarium: i64,
+    pub legendarium: i64,
+    pub mythicite: i64,
+    pub is_busy: bool,
+    pub protector: Option<Unit>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct JobBase {
-    pub(crate) title: Str,
-    pub(crate) energy: i64,
-    pub(crate) shield: i64,
-    pub(crate) moves: i64,
-    pub(crate) damage: i64,
-    pub(crate) carry_limit: i64,
-    pub(crate) unit_cost: i64,
-    pub(crate) range: i64,
+pub struct JobBase {
+    pub title: Str,
+    pub energy: i64,
+    pub shield: i64,
+    pub moves: i64,
+    pub damage: i64,
+    pub carry_limit: i64,
+    pub unit_cost: i64,
+    pub range: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameBase {
-    pub(crate) game_objects: Map<Str, GameObject>,
-    pub(crate) players: List<Player>,
-    pub(crate) session: Str,
-    pub(crate) current_player: Player,
-    pub(crate) current_turn: i64,
-    pub(crate) max_turns: i64,
-    pub(crate) time_added_per_turn: i64,
-    pub(crate) units: List<Unit>,
-    pub(crate) projectiles: List<Projectile>,
-    pub(crate) jobs: List<Job>,
-    pub(crate) bodies: List<Body>,
-    pub(crate) size_x: i64,
-    pub(crate) size_y: i64,
-    pub(crate) dash_distance: i64,
-    pub(crate) dash_cost: i64,
-    pub(crate) max_asteroid: i64,
-    pub(crate) min_asteroid: i64,
-    pub(crate) ore_rarity_genarium: f64,
-    pub(crate) ore_rarity_rarium: f64,
-    pub(crate) ore_rarity_legendarium: f64,
-    pub(crate) genarium_value: f64,
-    pub(crate) rarium_value: f64,
-    pub(crate) legendarium_value: f64,
-    pub(crate) mythicite_amount: f64,
-    pub(crate) regenerate_rate: f64,
-    pub(crate) planet_recharge_rate: i64,
-    pub(crate) planet_energy_cap: i64,
-    pub(crate) mining_speed: i64,
-    pub(crate) projectile_speed: i64,
-    pub(crate) projectile_radius: i64,
-    pub(crate) ship_radius: i64,
-    pub(crate) turns_to_orbit: i64,
-    pub(crate) orbits_protected: i64,
+pub struct GameBase {
+    pub game_objects: Map<Str, GameObject>,
+    pub players: List<Player>,
+    pub session: Str,
+    pub current_player: Player,
+    pub current_turn: i64,
+    pub max_turns: i64,
+    pub time_added_per_turn: i64,
+    pub units: List<Unit>,
+    pub projectiles: List<Projectile>,
+    pub jobs: List<Job>,
+    pub bodies: List<Body>,
+    pub size_x: i64,
+    pub size_y: i64,
+    pub dash_distance: i64,
+    pub dash_cost: i64,
+    pub max_asteroid: i64,
+    pub min_asteroid: i64,
+    pub ore_rarity_genarium: f64,
+    pub ore_rarity_rarium: f64,
+    pub ore_rarity_legendarium: f64,
+    pub genarium_value: f64,
+    pub rarium_value: f64,
+    pub legendarium_value: f64,
+    pub mythicite_amount: f64,
+    pub regenerate_rate: f64,
+    pub planet_recharge_rate: i64,
+    pub planet_energy_cap: i64,
+    pub mining_speed: i64,
+    pub projectile_speed: i64,
+    pub projectile_radius: i64,
+    pub ship_radius: i64,
+    pub turns_to_orbit: i64,
+    pub orbits_protected: i64,
 }

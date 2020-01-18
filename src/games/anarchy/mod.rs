@@ -22,3 +22,5 @@ pub use weather_station::WeatherStation;
 pub use police_department::PoliceDepartment;
 pub use forecast::Forecast;
 pub use game::Game;
+
+pub use inner::Object;

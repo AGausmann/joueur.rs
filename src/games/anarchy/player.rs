@@ -168,4 +168,25 @@ impl Player {
         };
         self.with_context(|cx| cx.run(&self.id(), "log", args))
     }
+
+    pub fn try_cast<T: Object>(&self) -> Option<T> {
+        T::from_game_object(&self.inner, &self.context)
+    }
+
+    pub fn cast<T: Object>(&self) -> T {
+        self.try_cast().unwrap()
+    }
 }
+
+impl inner::ObjectInner for Player {
+    fn from_game_object(game_obj: &Arc<Mutex<inner::GameObject>>, context: &Weak<Mutex<inner::Context>>) -> Option<Self> {
+        let handle = game_obj.lock().unwrap();
+        handle.try_as_player()?;
+        handle.try_as_game_object()?;
+        Some(Player {
+            inner: Arc::clone(&game_obj),
+            context: context.clone(),
+        })
+    }
+}
+impl Object for Player {}

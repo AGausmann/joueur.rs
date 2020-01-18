@@ -19,3 +19,5 @@ pub use unit::Unit;
 pub use unit_job::UnitJob;
 pub use tower_job::TowerJob;
 pub use game::Game;
+
+pub use inner::Object;

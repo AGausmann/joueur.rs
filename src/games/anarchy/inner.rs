@@ -1,22 +1,31 @@
 #![allow(unused_imports, dead_code)]
 
+use std::sync::{Arc, Mutex, Weak};
+
 use super::*;
 use crate::types::*;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Context {
+pub struct Context {
     game: GameBase,
 }
 
 impl Context {
-    pub(crate) fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
+    pub fn run<A, R>(&mut self, _caller: &str, _function_name: &str, _args: A) -> Result<R, Error> {
         unimplemented!()
     }
 }
 
+pub trait Object: ObjectInner {
+}
+
+pub trait ObjectInner: Sized {
+    fn from_game_object(game_obj: &Arc<Mutex<GameObject>>, context: &Weak<Mutex<Context>>) -> Option<Self>;
+}
+
 #[derive(Debug, Clone)]
-pub(crate) enum GameObject {
+pub enum GameObject {
     GameObject(GameObjectInner),
     Player(PlayerInner),
     Building(BuildingInner),
@@ -28,15 +37,15 @@ pub(crate) enum GameObject {
 }
 
 impl GameObject {
-    pub(crate) fn id(&self) -> Str {
+    pub fn id(&self) -> Str {
         self.as_game_object().id.clone()
     }
 
-    pub(crate) fn object_type(&self) -> Str {
+    pub fn object_type(&self) -> Str {
         self.as_game_object().game_object_name.clone()
     }
 
-    pub(crate) fn try_as_game_object(&self) -> Option< &GameObjectBase > {
+    pub fn try_as_game_object(&self) -> Option< &GameObjectBase > {
         match self {
             GameObject::GameObject(obj) => Some(&obj.game_object),
             GameObject::Player(obj) => Some(&obj.game_object),
@@ -49,11 +58,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_game_object(&self) -> &GameObjectBase {
+    pub fn as_game_object(&self) -> &GameObjectBase {
         self.try_as_game_object().expect("unreachable: unable to cast to GameObject")
     }
 
-    pub(crate) fn try_as_player(&self) -> Option< &PlayerBase > {
+    pub fn try_as_player(&self) -> Option< &PlayerBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(obj) => Some(&obj.player),
@@ -66,11 +75,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_player(&self) -> &PlayerBase {
+    pub fn as_player(&self) -> &PlayerBase {
         self.try_as_player().expect("unreachable: unable to cast to Player")
     }
 
-    pub(crate) fn try_as_building(&self) -> Option< &BuildingBase > {
+    pub fn try_as_building(&self) -> Option< &BuildingBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -83,11 +92,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_building(&self) -> &BuildingBase {
+    pub fn as_building(&self) -> &BuildingBase {
         self.try_as_building().expect("unreachable: unable to cast to Building")
     }
 
-    pub(crate) fn try_as_warehouse(&self) -> Option< &WarehouseBase > {
+    pub fn try_as_warehouse(&self) -> Option< &WarehouseBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -100,11 +109,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_warehouse(&self) -> &WarehouseBase {
+    pub fn as_warehouse(&self) -> &WarehouseBase {
         self.try_as_warehouse().expect("unreachable: unable to cast to Warehouse")
     }
 
-    pub(crate) fn try_as_fire_department(&self) -> Option< &FireDepartmentBase > {
+    pub fn try_as_fire_department(&self) -> Option< &FireDepartmentBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -117,11 +126,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_fire_department(&self) -> &FireDepartmentBase {
+    pub fn as_fire_department(&self) -> &FireDepartmentBase {
         self.try_as_fire_department().expect("unreachable: unable to cast to FireDepartment")
     }
 
-    pub(crate) fn try_as_weather_station(&self) -> Option< &WeatherStationBase > {
+    pub fn try_as_weather_station(&self) -> Option< &WeatherStationBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -134,11 +143,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_weather_station(&self) -> &WeatherStationBase {
+    pub fn as_weather_station(&self) -> &WeatherStationBase {
         self.try_as_weather_station().expect("unreachable: unable to cast to WeatherStation")
     }
 
-    pub(crate) fn try_as_police_department(&self) -> Option< &PoliceDepartmentBase > {
+    pub fn try_as_police_department(&self) -> Option< &PoliceDepartmentBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -151,11 +160,11 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_police_department(&self) -> &PoliceDepartmentBase {
+    pub fn as_police_department(&self) -> &PoliceDepartmentBase {
         self.try_as_police_department().expect("unreachable: unable to cast to PoliceDepartment")
     }
 
-    pub(crate) fn try_as_forecast(&self) -> Option< &ForecastBase > {
+    pub fn try_as_forecast(&self) -> Option< &ForecastBase > {
         match self {
             GameObject::GameObject(_obj) => None,
             GameObject::Player(_obj) => None,
@@ -168,145 +177,145 @@ impl GameObject {
         }
     }
 
-    pub(crate) fn as_forecast(&self) -> &ForecastBase {
+    pub fn as_forecast(&self) -> &ForecastBase {
         self.try_as_forecast().expect("unreachable: unable to cast to Forecast")
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameObjectInner {
-    pub(crate) game_object: GameObjectBase,
+pub struct GameObjectInner {
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PlayerInner {
-    pub(crate) player: PlayerBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct PlayerInner {
+    pub player: PlayerBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct BuildingInner {
-    pub(crate) building: BuildingBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct BuildingInner {
+    pub building: BuildingBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct WarehouseInner {
-    pub(crate) warehouse: WarehouseBase,
-    pub(crate) building: BuildingBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct WarehouseInner {
+    pub warehouse: WarehouseBase,
+    pub building: BuildingBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct FireDepartmentInner {
-    pub(crate) fire_department: FireDepartmentBase,
-    pub(crate) building: BuildingBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct FireDepartmentInner {
+    pub fire_department: FireDepartmentBase,
+    pub building: BuildingBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct WeatherStationInner {
-    pub(crate) weather_station: WeatherStationBase,
-    pub(crate) building: BuildingBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct WeatherStationInner {
+    pub weather_station: WeatherStationBase,
+    pub building: BuildingBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PoliceDepartmentInner {
-    pub(crate) police_department: PoliceDepartmentBase,
-    pub(crate) building: BuildingBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct PoliceDepartmentInner {
+    pub police_department: PoliceDepartmentBase,
+    pub building: BuildingBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ForecastInner {
-    pub(crate) forecast: ForecastBase,
-    pub(crate) game_object: GameObjectBase,
+pub struct ForecastInner {
+    pub forecast: ForecastBase,
+    pub game_object: GameObjectBase,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameObjectBase {
-    pub(crate) id: Str,
-    pub(crate) game_object_name: Str,
-    pub(crate) logs: List<Str>,
+pub struct GameObjectBase {
+    pub id: Str,
+    pub game_object_name: Str,
+    pub logs: List<Str>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PlayerBase {
-    pub(crate) name: Str,
-    pub(crate) client_type: Str,
-    pub(crate) won: bool,
-    pub(crate) lost: bool,
-    pub(crate) reason_won: Str,
-    pub(crate) reason_lost: Str,
-    pub(crate) time_remaining: f64,
-    pub(crate) opponent: Player,
-    pub(crate) bribes_remaining: i64,
-    pub(crate) headquarters: Warehouse,
-    pub(crate) buildings: List<Building>,
-    pub(crate) warehouses: List<Warehouse>,
-    pub(crate) fire_departments: List<FireDepartment>,
-    pub(crate) police_departments: List<PoliceDepartment>,
-    pub(crate) weather_stations: List<WeatherStation>,
+pub struct PlayerBase {
+    pub name: Str,
+    pub client_type: Str,
+    pub won: bool,
+    pub lost: bool,
+    pub reason_won: Str,
+    pub reason_lost: Str,
+    pub time_remaining: f64,
+    pub opponent: Player,
+    pub bribes_remaining: i64,
+    pub headquarters: Warehouse,
+    pub buildings: List<Building>,
+    pub warehouses: List<Warehouse>,
+    pub fire_departments: List<FireDepartment>,
+    pub police_departments: List<PoliceDepartment>,
+    pub weather_stations: List<WeatherStation>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct BuildingBase {
-    pub(crate) health: i64,
-    pub(crate) owner: Player,
-    pub(crate) is_headquarters: bool,
-    pub(crate) bribed: bool,
-    pub(crate) x: i64,
-    pub(crate) y: i64,
-    pub(crate) fire: i64,
-    pub(crate) building_north: Option<Building>,
-    pub(crate) building_east: Option<Building>,
-    pub(crate) building_south: Option<Building>,
-    pub(crate) building_west: Option<Building>,
+pub struct BuildingBase {
+    pub health: i64,
+    pub owner: Player,
+    pub is_headquarters: bool,
+    pub bribed: bool,
+    pub x: i64,
+    pub y: i64,
+    pub fire: i64,
+    pub building_north: Option<Building>,
+    pub building_east: Option<Building>,
+    pub building_south: Option<Building>,
+    pub building_west: Option<Building>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct WarehouseBase {
-    pub(crate) fire_added: i64,
-    pub(crate) exposure: i64,
+pub struct WarehouseBase {
+    pub fire_added: i64,
+    pub exposure: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct FireDepartmentBase {
-    pub(crate) fire_extinguished: i64,
+pub struct FireDepartmentBase {
+    pub fire_extinguished: i64,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct WeatherStationBase {
+pub struct WeatherStationBase {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PoliceDepartmentBase {
+pub struct PoliceDepartmentBase {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ForecastBase {
-    pub(crate) direction: Str,
-    pub(crate) intensity: i64,
-    pub(crate) controlling_player: Player,
+pub struct ForecastBase {
+    pub direction: Str,
+    pub intensity: i64,
+    pub controlling_player: Player,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct GameBase {
-    pub(crate) game_objects: Map<Str, GameObject>,
-    pub(crate) players: List<Player>,
-    pub(crate) session: Str,
-    pub(crate) current_player: Player,
-    pub(crate) current_turn: i64,
-    pub(crate) max_turns: i64,
-    pub(crate) time_added_per_turn: i64,
-    pub(crate) map_width: i64,
-    pub(crate) map_height: i64,
-    pub(crate) buildings: List<Building>,
-    pub(crate) forecasts: List<Forecast>,
-    pub(crate) current_forecast: Forecast,
-    pub(crate) next_forecast: Option<Forecast>,
-    pub(crate) base_bribes_per_turn: i64,
-    pub(crate) max_fire: i64,
-    pub(crate) max_forecast_intensity: i64,
+pub struct GameBase {
+    pub game_objects: Map<Str, GameObject>,
+    pub players: List<Player>,
+    pub session: Str,
+    pub current_player: Player,
+    pub current_turn: i64,
+    pub max_turns: i64,
+    pub time_added_per_turn: i64,
+    pub map_width: i64,
+    pub map_height: i64,
+    pub buildings: List<Building>,
+    pub forecasts: List<Forecast>,
+    pub current_forecast: Forecast,
+    pub next_forecast: Option<Forecast>,
+    pub base_bribes_per_turn: i64,
+    pub max_fire: i64,
+    pub max_forecast_intensity: i64,
 }
