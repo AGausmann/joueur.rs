@@ -3,24 +3,24 @@
 
 mod inner;
 
+mod building;
+mod fire_department;
+mod forecast;
 mod game_object;
 mod player;
-mod building;
-mod warehouse;
-mod fire_department;
-mod weather_station;
 mod police_department;
-mod forecast;
+mod warehouse;
+mod weather_station;
 mod game;
 
+pub use building::Building;
+pub use fire_department::FireDepartment;
+pub use forecast::Forecast;
 pub use game_object::GameObject;
 pub use player::Player;
-pub use building::Building;
-pub use warehouse::Warehouse;
-pub use fire_department::FireDepartment;
-pub use weather_station::WeatherStation;
 pub use police_department::PoliceDepartment;
-pub use forecast::Forecast;
+pub use warehouse::Warehouse;
+pub use weather_station::WeatherStation;
 pub use game::Game;
 
 pub use inner::Object;

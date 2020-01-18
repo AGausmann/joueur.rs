@@ -3,20 +3,20 @@
 
 mod inner;
 
-mod game_object;
-mod player;
 mod body;
+mod game_object;
+mod job;
+mod player;
 mod projectile;
 mod unit;
-mod job;
 mod game;
 
-pub use game_object::GameObject;
-pub use player::Player;
 pub use body::Body;
+pub use game_object::GameObject;
+pub use job::Job;
+pub use player::Player;
 pub use projectile::Projectile;
 pub use unit::Unit;
-pub use job::Job;
 pub use game::Game;
 
 pub use inner::Object;

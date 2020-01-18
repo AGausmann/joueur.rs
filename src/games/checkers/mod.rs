@@ -3,14 +3,14 @@
 
 mod inner;
 
+mod checker;
 mod game_object;
 mod player;
-mod checker;
 mod game;
 
+pub use checker::Checker;
 pub use game_object::GameObject;
 pub use player::Player;
-pub use checker::Checker;
 pub use game::Game;
 
 pub use inner::Object;
